@@ -1,0 +1,4 @@
+/.env
+/app.db
+/.DS_Store
+logs/
