@@ -42,10 +42,6 @@ class EditProfileForm(FlaskForm):
             if user is not None:
                 raise ValidationError('This username is already taken.')
 
-class PostForm(FlaskForm):
-    post = TextAreaField('What\'s on your mind?', validators=[DataRequired(), Length(min=1, max=140)])
-    submit = SubmitField('Post')
-
 class ResetPasswordRequestForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
     submit = SubmitField('Request Password Reset')
