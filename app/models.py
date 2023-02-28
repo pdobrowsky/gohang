@@ -15,7 +15,7 @@ class User(UserMixin, db.Model):
     phone_number = db.Column(db.String(255), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
     user_type = db.Column(db.String(255), index=True, default='sms')
-    max_hang_per_week = db.Column(db.Integer, default=2)
+    max_hang_per_week = db.Column(db.Integer, default=3)
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -43,6 +43,13 @@ class User(UserMixin, db.Model):
             {'reset_password': self.id, 'exp': time() + expires_in}, 
             app.config['SECRET_KEY'], 
             algorithm='HS256')
+    
+    # def friend(self, user):
+    #     if not self.is_friend(user):
+    #         self.followed.append(user)
+
+    def is_friend(self, user):
+        return self.friends.filter_by(friend_user_id=user.id).count() > 0
 
     @staticmethod
     def verify_reset_password_token(token):
@@ -63,4 +70,4 @@ class Friend(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
     def __repr__(self):
-        return '<Friend creator_id: {} friend_id: {} cadence: {}>'.format(self.creator_user_id, self.friend_user_id, self.cadence)
+        return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)

@@ -3,7 +3,7 @@ from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
 from app import app, db
 from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm
-from app.models import User
+from app.models import User, Friend
 from app.emails import send_password_reset_email
 from datetime import datetime
 
@@ -17,13 +17,26 @@ def before_request():
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    # add quick form for adding new contact
-    # add sections for different home page data
     form = FriendForm()
 
     if form.validate_on_submit():
-        # need to validate if already a contact later
+        user = User.query.filter_by(phone_number=form.phone_number.data).first()
 
+        if user is None:
+            user = User(phone_number=form.phone_number.data, first_name=form.name.data)
+            db.session.add(user)
+            db.session.commit()
+            user = User.query.filter_by(phone_number=form.phone_number.data).first()
+        elif user == current_user: 
+            flash('You can\'t friend yourself!')
+            return redirect(url_for('index'))
+        elif current_user.is_friend(user):
+            flash('You\'ve already added {} as a friend!'.format(form.name.data))
+            return redirect(url_for('index'))
+
+        friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
+        db.session.add(friend)
+        db.session.commit()
         flash('Added {} as a friend!'.format(form.name.data))
         return redirect(url_for('index'))
 
@@ -67,7 +80,8 @@ def signup():
 
     if form.validate_on_submit():
         if app.config['ALLOW_SIGNUP']:
-            user = User(username=form.username.data, email=form.email.data, first_name=form.first_name.data, last_name=form.last_name.data, phone_number=form.phone_number.data)
+            user = User(username=form.username.data, email=form.email.data, first_name=form.first_name.data, 
+                        last_name=form.last_name.data, phone_number=form.phone_number.data, user_type='hang')
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
