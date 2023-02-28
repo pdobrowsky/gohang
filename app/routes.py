@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
 from app import app, db
-from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm
+from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, ContactForm
 from app.models import User
 from app.emails import send_password_reset_email
 from datetime import datetime
@@ -19,8 +19,15 @@ def before_request():
 def index():
     # add quick form for adding new contact
     # add sections for different home page data
+    form = ContactForm()
 
-    return render_template('index.html', title='Home')
+    if form.validate_on_submit():
+        # need to validate if already a contact later
+        
+        flash('Added {} as a contact!'.format(form.first_name.data))
+        return redirect(url_for('index'))
+
+    return render_template('index.html', title='Home', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
