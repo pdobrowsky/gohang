@@ -11,4 +11,11 @@
     </div>
     <br>
     {% endif %}
+    {% for friend in friends %}
+    <p>
+        <b>Name:</b> {{ friend.provided_name}}
+        <b>Phone Number:</b> {{ friend.users.phone_number }}
+        <b>Cadence:</b> {{friend.cadence }}
+    </p>
+    {% endfor %}
 {% endblock %}

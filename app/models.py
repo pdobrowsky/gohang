@@ -7,6 +7,8 @@ from flask_login import UserMixin
 from hashlib import md5
 from time import time
 
+# making a friends table up here like followers would make things better in some ways probably, and clean up logic here and in routes
+
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
@@ -68,6 +70,7 @@ class Friend(db.Model):
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    users = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
 
     def __repr__(self):
         return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)

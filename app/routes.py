@@ -47,12 +47,13 @@ def index():
 @login_required
 def friends():
     form = FriendForm()
+    friends = Friend.query.filter_by(creator_user_id=current_user.id)
 
     if form.validate_on_submit():
         add_friend(form)
         return redirect(url_for('friends'))
 
-    return render_template('friends.html', title='Friends', form=form)
+    return render_template('friends.html', title='Friends', form=form, friends=friends)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
