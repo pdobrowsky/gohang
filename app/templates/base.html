@@ -24,7 +24,7 @@
             <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                 <ul class="nav navbar-nav">
                     {% if not current_user.is_anonymous %}
-                    <li><a href="{{ url_for('index') }}">Friends</a></li>
+                    <li><a href="{{ url_for('friends') }}">Friends</a></li>
                     <li><a href="{{ url_for('index') }}">Schedule</a></li>
                     {% endif %}
                 </ul>

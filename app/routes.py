@@ -7,6 +7,27 @@ from app.models import User, Friend
 from app.emails import send_password_reset_email
 from datetime import datetime
 
+def add_friend(form, page):
+    user = User.query.filter_by(phone_number=form.phone_number.data).first()
+
+    if user is None:
+        user = User(phone_number=form.phone_number.data, first_name=form.name.data)
+        db.session.add(user)
+        db.session.commit()
+        user = User.query.filter_by(phone_number=form.phone_number.data).first()
+    elif user == current_user: 
+        flash('You can\'t friend yourself!')
+        return redirect(url_for(page))
+    elif current_user.is_friend(user):
+        flash('You\'ve already added {} as a friend!'.format(form.name.data))
+        return redirect(url_for(page))
+
+    friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
+    db.session.add(friend)
+    db.session.commit()
+    flash('Added {} as a friend!'.format(form.name.data))
+    return redirect(url_for(page))
+
 @app.before_request
 def before_request():
     if current_user.is_authenticated:
@@ -20,27 +41,19 @@ def index():
     form = FriendForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(phone_number=form.phone_number.data).first()
-
-        if user is None:
-            user = User(phone_number=form.phone_number.data, first_name=form.name.data)
-            db.session.add(user)
-            db.session.commit()
-            user = User.query.filter_by(phone_number=form.phone_number.data).first()
-        elif user == current_user: 
-            flash('You can\'t friend yourself!')
-            return redirect(url_for('index'))
-        elif current_user.is_friend(user):
-            flash('You\'ve already added {} as a friend!'.format(form.name.data))
-            return redirect(url_for('index'))
-
-        friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
-        db.session.add(friend)
-        db.session.commit()
-        flash('Added {} as a friend!'.format(form.name.data))
-        return redirect(url_for('index'))
+        add_friend(form, 'index')
 
     return render_template('index.html', title='Home', form=form)
+
+@app.route('/friends', methods=['GET','POST'])
+@login_required
+def friends():
+    form = FriendForm()
+
+    if form.validate_on_submit():
+        add_friend(form, 'friends')
+
+    return render_template('friends.html', title='Friends', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
