@@ -2,20 +2,29 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    {% if form %}
-    <h3>Add a new friend</h3>
-    <div class="row">
-        <div class="col-md-3">
-            {{ wtf.quick_form(form) }}
-        </div>
-    </div>
+    <h3>Add Friend</h3>
+    {% include '_add_friend.html' %}
     <br>
-    {% endif %}
-    {% for friend in friends %}
-    <p>
-        <b>Name:</b> {{ friend.provided_name}}
-        <b>Phone Number:</b> {{ friend.users.phone_number }}
-        <b>Cadence:</b> {{friend.cadence }}
-    </p>
-    {% endfor %}
+    <h3>Friends</h3>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+                <th>Cadence</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for friend in friends %}
+            <tr>
+                <td>{{ friend.provided_name }}</td>
+                <td>{{ friend.users.phone_number }}</td>
+                <td>{{friend.cadence }} weeks</td>
+                <td><a href="">Edit</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="" >Delete</a></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}
+
