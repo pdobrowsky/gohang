@@ -96,11 +96,11 @@ class ResetPasswordForm(FlaskForm):
 class EmptyForm(FlaskForm):
     submit = SubmitField('Submit')
 
-class ContactForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
+class FriendForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=30)])
     phone_number = StringField('Phone Number', validators=[DataRequired()])
-    cadence = SelectField('', choices=[1,2,3,4], validators=[DataRequired()], default=2)
-    submit = SubmitField('Add Contact')
+    cadence = SelectField('Try to hang ever X weeks:', choices=[1,2,3,4], validators=[DataRequired()], default=2)
+    submit = SubmitField('Add Friend')
 
     def validate_phone_number(self, phone_number):
         check_phone_number(phone_number)
