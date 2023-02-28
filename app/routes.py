@@ -7,7 +7,7 @@ from app.models import User, Friend
 from app.emails import send_password_reset_email
 from datetime import datetime
 
-def add_friend(form, page):
+def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
 
     if user is None:
@@ -17,16 +17,13 @@ def add_friend(form, page):
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
     elif user == current_user: 
         flash('You can\'t friend yourself!')
-        return redirect(url_for(page))
     elif current_user.is_friend(user):
         flash('You\'ve already added {} as a friend!'.format(form.name.data))
-        return redirect(url_for(page))
 
     friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
     db.session.add(friend)
     db.session.commit()
     flash('Added {} as a friend!'.format(form.name.data))
-    return redirect(url_for(page))
 
 @app.before_request
 def before_request():
@@ -41,7 +38,8 @@ def index():
     form = FriendForm()
 
     if form.validate_on_submit():
-        add_friend(form, 'index')
+        add_friend(form)
+        return redirect(url_for('index'))
 
     return render_template('index.html', title='Home', form=form)
 
@@ -51,7 +49,8 @@ def friends():
     form = FriendForm()
 
     if form.validate_on_submit():
-        add_friend(form, 'friends')
+        add_friend(form)
+        return redirect(url_for('friends'))
 
     return render_template('friends.html', title='Friends', form=form)
 
