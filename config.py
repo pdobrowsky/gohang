@@ -17,4 +17,4 @@ class Config(object):
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     ADMINS = ['pdbrosky@gmail.com']
-    POSTS_PER_PAGE = 5
+    ALLOW_SIGNUP = True

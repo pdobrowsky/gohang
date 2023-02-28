@@ -16,9 +16,15 @@ from time import time
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(64), index=True, unique=True)
+    first_name = db.Column(db.String(255))
+    last_name = db.Column(db.String(255))
+    phone_number = db.Column(db.String(255), index=True, unique=True)
     email = db.Column(db.String(120), index=True, unique=True)
+    user_type = db.Column(db.String(255), index=True, default='sms')
+    max_hang_per_week = db.Column(db.Integer, default=2)
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
     # followed = db.relationship(
     #     'User', secondary=followers,
     #     primaryjoin = (followers.c.follower_id == id),

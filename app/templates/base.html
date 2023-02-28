@@ -1,5 +1,10 @@
 {% extends 'bootstrap/base.html' %}
 
+{% block styles %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.4/css/intlTelInput.css">
+{% endblock %}
+
 {% block title %}
     {% if title %}{{ title }} - GoHang{% else %}Welcome to GoHang{% endif %}
 {% endblock %}
@@ -22,10 +27,10 @@
                 </ul>
                 <ul class="nav navbar-nav navbar-right">
                     {% if current_user.is_anonymous %}
-                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                    <li><a href="{{ url_for('login') }}">Log In</a></li>
                     {% else %}
                     <li><a href="{{ url_for('user', username=current_user.username) }}">Profile</a></li>
-                    <li><a href="{{ url_for('logout') }}">Logout</a></li>
+                    <li><a href="{{ url_for('logout') }}">Log Out</a></li>
                     {% endif %}
                 </ul>
             </div>
@@ -51,4 +56,21 @@
 {% block scripts %}
     {{ super() }}
     {{ moment.include_moment() }}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.4/js/intlTelInput.min.js"></script>
+    <script>
+        var wtf_phone_field = document.getElementById('phone_number');
+        wtf_phone_field.style.position = 'absolute';
+        wtf_phone_field.style.top = '-9999px';
+        wtf_phone_field.style.left = '-9999px';
+        wtf_phone_field.parentElement.insertAdjacentHTML('beforeend', '<div><input type="tel" id="_phone_number"></div>');
+        var fancy_phone_field = document.getElementById('_phone_number');
+        var fancy_phone_iti = window.intlTelInput(fancy_phone_field, {
+            separateDialCode: true,
+            utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/16.0.4/js/utils.js",
+        });
+        fancy_phone_iti.setNumber(wtf_phone_field.value);
+        fancy_phone_field.addEventListener('blur', function() {
+            wtf_phone_field.value = fancy_phone_iti.getNumber();
+        });
+    </script>
 {% endblock %}
