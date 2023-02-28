@@ -44,7 +44,7 @@ def login():
 
         return redirect(next_page)
 
-    return render_template('login.html', title='Sign In', form=form)
+    return render_template('login.html', title='Log In', form=form)
 
 @app.route('/logout')
 def logout():
