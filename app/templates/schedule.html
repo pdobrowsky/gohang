@@ -7,6 +7,9 @@
         {{ form.hidden_tag() }}
         <p><b>Week of:</b>
         {{ form.dt(class='datepicker') }}
+        {% for error in form.dt.errors %}
+        <span style="color: red;">[{{ error }}]</span>
+        {% endfor %}
         <p><b>FYI: Weeks run Monday to Sunday</b>
         <table class="table table-hover">
             <thead>

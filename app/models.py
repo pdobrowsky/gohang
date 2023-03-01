@@ -85,7 +85,9 @@ class Schedule(db.Model):
     updated_at = db.Column(db.DateTime, index=True)
     week_of = db.Column(db.DateTime, index=True)
     avails = db.Column(db.Text)
-    processed = db.Column(db.Boolean, index=True, default=False)
+    processed_at = db.Column(db.DateTime, index=True)
 
     def __repr__(self):
         return '<Schedule user_id: {} created_at: {} avails: {} week of: {}>'.format(self.user_id, self.created_at, self.avails, self.week_of)
+    
+# need to start hangs model, handle coldstart

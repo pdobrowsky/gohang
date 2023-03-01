@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from wtforms.fields import DateField
 from app.models import User
+from datetime import datetime
 
 import phonenumbers
 import collections
@@ -107,10 +108,13 @@ class FriendForm(FlaskForm):
     def validate_phone_number(self, phone_number):
         check_phone_number(phone_number)
 
-
 class ScheduleForm(FlaskForm):
     submit = SubmitField('Submit')
-    dt = DateField('DatePicker', format='%Y-%m-%d')
+    dt = DateField('DatePicker', format='%Y-%m-%d', validators=[DataRequired()])
+
+    def validate_dt(self, dt):
+        if datetime.utcnow().date().isocalendar().week > dt.data.isocalendar().week:
+            raise ValidationError("That week is in the past")
 
 for time in ['Morning', 'Afternoon', 'Evening']:
     for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
