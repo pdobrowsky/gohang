@@ -52,6 +52,9 @@ class User(UserMixin, db.Model):
 
     def is_friend(self, user):
         return self.friends.filter_by(friend_user_id=user.id).count() > 0
+    
+    def unfriend(self, user):
+        self.friends.remove(user)
 
     @staticmethod
     def verify_reset_password_token(token):
@@ -70,7 +73,7 @@ class Friend(db.Model):
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    users = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
+    user = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
 
     def __repr__(self):
         return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)

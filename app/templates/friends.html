@@ -19,9 +19,9 @@
             {% for friend in friends %}
             <tr>
                 <td>{{ friend.provided_name }}</td>
-                <td>{{ friend.users.phone_number }}</td>
+                <td>{{ friend.user.phone_number }}</td>
                 <td>{{friend.cadence }} weeks</td>
-                <td><a href="">Edit</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="" >Delete</a></td>
+                <td><a href="">Edit</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="{{ url_for('unfriend', id=friend.user.id) }}">Delete</a></td>
             </tr>
             {% endfor %}
         </tbody>

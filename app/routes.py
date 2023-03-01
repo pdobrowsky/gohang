@@ -55,6 +55,31 @@ def friends():
 
     return render_template('friends.html', title='Friends', form=form, friends=friends)
 
+@app.route('/unfriend/<id>', methods=['GET'])
+@login_required
+def unfriend(id):
+    user = User.query.filter_by(id=id).first()
+
+    if user is None:
+        flash('User {} not found.'.format(id))
+        return redirect(url_for('friends'))
+    if user == current_user:
+        flash('You can\'t unfriend yourself!')
+        return redirect(url_for('friends'))
+    if not current_user.is_friend(user):
+        flash('You are not friends with {}'.format(id))
+        return redirect(url_for('friends'))
+    
+    friend = Friend.query.filter_by(creator_user_id=current_user.id, friend_user_id=id).first()
+    name = friend.provided_name
+    
+    db.session.delete(friend)
+    db.session.commit()
+    
+    flash('You unfriended {}'.format(name))
+
+    return redirect(url_for('friends'))
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
