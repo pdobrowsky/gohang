@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{% block app_content %}
+    <h3>Schedule</h3>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Time</th>
+                {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                <th>{{ day }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for time in ["Morning", "Afternoon", "Evening"] %}
+            <tr>
+                <td>{{ time }}</td>
+                {% for n in range(7) %}
+                <td><input type="checkbox"></td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

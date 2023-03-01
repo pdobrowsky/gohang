@@ -80,6 +80,11 @@ def unfriend(id):
 
     return redirect(url_for('friends'))
 
+@app.route('/schedule', methods=['GET'])
+@login_required
+def schedule():
+    return render_template('schedule.html', title='Schedule')
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
