@@ -3,24 +3,31 @@
 
 {% block app_content %}
     <h3>Schedule</h3>
-    <table class="table table-hover">
-        <thead>
-            <tr>
-                <th>Time</th>
-                {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
-                <th>{{ day }}</th>
+    <form action="" method="post">
+        {{ form.hidden_tag() }}
+        <p><b>Week of:</b>
+        {{ form.dt(class='datepicker') }}
+        <p><b>FYI: Weeks run Monday to Sunday</b>
+        <table class="table table-hover">
+            <thead>
+                <tr>
+                    <th>Time</th>
+                    {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                    <th>{{ day }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for time in ["Morning", "Afternoon", "Evening"] %}
+                <tr>
+                    <td>{{ time }}</td>
+                    {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                    <td>{{ form |attr(time + day)() }}</td>
+                    {% endfor %}
+                </tr>
                 {% endfor %}
-            </tr>
-        </thead>
-        <tbody>
-            {% for time in ["Morning", "Afternoon", "Evening"] %}
-            <tr>
-                <td>{{ time }}</td>
-                {% for n in range(7) %}
-                <td><input type="checkbox"></td>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+        {{ form.submit(class="btn btn-primary") }}
+    </form>
 {% endblock %}

@@ -72,8 +72,20 @@ class Friend(db.Model):
     cadence = db.Column(db.Integer)
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
-    updated_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, index=True)
     user = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
 
     def __repr__(self):
         return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)
+    
+class Schedule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, index=True)
+    week_of = db.Column(db.DateTime, index=True)
+    avails = db.Column(db.Text)
+    processed = db.Column(db.Boolean, index=True, default=False)
+
+    def __repr__(self):
+        return '<Schedule user_id: {} created_at: {} avails: {} week of: {}>'.format(self.user_id, self.created_at, self.avails, self.week_of)

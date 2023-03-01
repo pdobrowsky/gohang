@@ -1,9 +1,11 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
+from wtforms.fields import DateField
 from app.models import User
 
 import phonenumbers
+import collections
 
 def check_phone_number(phone_number):
     try:
@@ -99,8 +101,17 @@ class EmptyForm(FlaskForm):
 class FriendForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=30)])
     phone_number = StringField('Phone Number', validators=[DataRequired()])
-    cadence = SelectField('Try to hang ever X weeks:', choices=[1,2,3,4], validators=[DataRequired()], default=2)
+    cadence = SelectField('Try to hang ever X weeks:', choices=[1,2,3,4,5,6,7,8], validators=[DataRequired()], default=3)
     submit = SubmitField('Add Friend')
 
     def validate_phone_number(self, phone_number):
         check_phone_number(phone_number)
+
+
+class ScheduleForm(FlaskForm):
+    submit = SubmitField('Submit')
+    dt = DateField('DatePicker', format='%Y-%m-%d')
+
+for time in ['Morning', 'Afternoon', 'Evening']:
+    for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+        setattr(ScheduleForm, time + day, BooleanField() ) 

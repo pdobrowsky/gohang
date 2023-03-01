@@ -2,10 +2,13 @@ from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
 from app import app, db
-from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm
-from app.models import User, Friend
+from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm
+from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
 from datetime import datetime
+from json import dumps
+
+import collections
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
@@ -80,10 +83,28 @@ def unfriend(id):
 
     return redirect(url_for('friends'))
 
-@app.route('/schedule', methods=['GET'])
+@app.route('/schedule', methods=['GET','POST'])
 @login_required
 def schedule():
-    return render_template('schedule.html', title='Schedule')
+    form = ScheduleForm()
+
+    if form.validate_on_submit():
+        avails = collections.defaultdict(dict)
+
+        for time in ['Morning', 'Afternoon', 'Evening']:
+            for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+                avails[time][day] = getattr(form, time+day).data
+
+        avails = dumps(avails)
+
+        schedule = Schedule(user_id = current_user.id, week_of = form.dt.data, avails=avails)
+        db.session.add(schedule)
+        db.session.commit()
+
+        flash("Your schedule for the week of {} was added! :D".format(form.dt.data))
+        redirect(url_for('schedule'))
+
+    return render_template('schedule.html', title='Schedule', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
