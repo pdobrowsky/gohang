@@ -5,3 +5,4 @@ logs/
 venv/
 scheduler.ipynb
 messager.ipynb
+send_sms_test.py

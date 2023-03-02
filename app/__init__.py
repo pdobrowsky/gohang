@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from flask_mail import Mail
 from flask_bootstrap import Bootstrap
 from flask_moment import Moment
+from twilio.rest import Client
 import logging
 from logging.handlers import SMTPHandler, RotatingFileHandler
 import os
@@ -19,6 +20,7 @@ login.login_view = 'login'
 mail = Mail(app)
 bootstrapp = Bootstrap(app)
 moment = Moment(app)
+sms_client = Client(app.config['TWILIO_SID'], app.config['TWILIO_AUTH'])
 
 if not app.debug:
     if app.config['MAIL_SERVER']:

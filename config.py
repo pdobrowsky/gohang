@@ -1,6 +1,8 @@
 import os
 from dotenv import load_dotenv
 
+load_dotenv()
+
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
@@ -18,3 +20,5 @@ class Config(object):
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     ADMINS = ['pdbrosky@gmail.com']
     ALLOW_SIGNUP = True
+    TWILIO_SID = os.environ.get('TWILIO_ACCOUNT_SID')
+    TWILIO_AUTH = os.environ.get('TWILIO_AUTH_TOKEN')
