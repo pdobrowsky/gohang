@@ -72,6 +72,7 @@ class Friend(db.Model):
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     friend_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     cadence = db.Column(db.Integer)
+    # friend_cadence eventually
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, index=True)
