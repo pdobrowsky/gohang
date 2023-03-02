@@ -66,21 +66,29 @@ class User(UserMixin, db.Model):
         return User.query.get(id)
     
 class Friend(db.Model):
+    # add relation type, sms or hang
+    # add "live" - basically to protect against 1 way hang:hang friends
     id = db.Column(db.Integer, primary_key=True)
-    creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    friend_user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    friend_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     cadence = db.Column(db.Integer)
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, index=True)
     user = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
 
+    def update_type():
+        pass
+
+    def is_live():
+        pass
+
     def __repr__(self):
         return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)
     
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, index=True)
     week_of = db.Column(db.DateTime, index=True)
@@ -91,3 +99,22 @@ class Schedule(db.Model):
         return '<Schedule user_id: {} created_at: {} avails: {} week of: {}>'.format(self.user_id, self.created_at, self.avails, self.week_of)
     
 # need to start hangs model, handle coldstart
+class Hang(db.Model):
+    # need friend ID
+    id = db.Column(db.Integer, primary_key=True)
+    user_id_1 = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    user_id_2 = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, index=True)
+    schedule = db.Column(db.Text)
+    week_of = db.Column(db.Integer, index=True)
+    state = db.Column(db.String(255), index=True)
+    priority = db.Column(db.Float(), index=True)
+    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id'))
+
+    def get_slots(self):
+        pass
+        # will return a string version of schedule 
+
+    def __repr__(self):
+        return '<Hang>'
