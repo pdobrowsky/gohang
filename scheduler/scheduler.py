@@ -93,8 +93,10 @@ def get_schedule(user_id):
 # take every friend and make a new attempt for it 
 # need to consider each week in future
 def create_sms_hangs():
-    for index, row in friends.iterrows():
-        if not row.state == row.state:
+    counter = 0
+
+    for index, row in friends_hangs.iterrows():
+        if not row.state:
             if row.attempt or not row.time_since_hang == row.time_since_hang:
                 used_schedule = get_schedule(row.creator_user_id)
                 # need to set priority intelligently in the future
@@ -106,5 +108,8 @@ def create_sms_hangs():
                     # for any in the current week that are still in prospect, should also update schedule ID to be used schedule
                     
                     db.session.add(hang_to_add)
+                    counter += 1
+                    
 
     db.session.commit()
+    print('added {} hangs'.format(counter))
