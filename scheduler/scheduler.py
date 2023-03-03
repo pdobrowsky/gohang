@@ -34,6 +34,8 @@ hangs = pd.read_sql(h.statement, conn)
 # DEFINING CONSTANTS FOR THE RUN
 sms_slots = 2 # number of slots to send SMS users
 fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
+
+
 current_week = dt.datetime.utcnow().isocalendar().week
 weekday = dt.datetime.utcnow().weekday()
 is_sunday = weekday == 6 # scheduler targets the week ahead if it's Sunday
@@ -65,8 +67,20 @@ weekday_filter = pd.DataFrame.from_dict(weekday_filter)
 empty_schedule = pd.DataFrame.from_dict(empty_schedule)
 
 # HELPER FUNCTIONS
-def get_schedule(user_id, live_schedules):
+# moving more things to functions because I'm concerned about the modules being used outside of the cronjob where things are newly imported
+def get_schedule(user_id):
+    live_schedules = get_live_schedules()
     return live_schedules[live_schedules.user_id == user_id]
+
+def get_live_schedules():
+    schedules = pd.read_sql(s.statement, conn)
+    schedules['week_of'] = schedules['week_of'].apply(lambda x: x.isocalendar().week)
+    schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
+    live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
+    live_schedules_time.reset_index(inplace=True)
+    live_schedules = schedules.merge(live_schedules_time, left_on=['user_id','week_of','created_at'], right_on=['user_id','week_of','created_at'], how='inner')
+
+    return live_schedules
 
 def sched_from_string(sched):
     return pd.DataFrame.from_dict(json.loads(sched))
@@ -122,12 +136,7 @@ else:
 
 # cleanup friends to the ones you want to try and schedule
 
-# PREP SCHEDULES TO CONSIDER
-schedules['week_of'] = schedules['week_of'].apply(lambda x: x.isocalendar().week)
-schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
-live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
-live_schedules_time.reset_index(inplace=True)
-live_schedules = schedules.merge(live_schedules_time, left_on=['user_id','week_of','created_at'], right_on=['user_id','week_of','created_at'], how='inner')
+
 
 
 # LOG all the hangs to happen
@@ -140,7 +149,7 @@ def create_sms_hangs():
     for index, row in friends_hangs.iterrows():
         if not row.state:
             if row.attempt or not row.time_since_hang == row.time_since_hang:
-                used_schedule = get_schedule(row.creator_user_id, live_schedules)
+                used_schedule = get_schedule(row.creator_user_id)
                 # need to set priority intelligently in the future
 
                 if not used_schedule.empty:
@@ -159,7 +168,7 @@ def create_sms_hangs():
 def schedule_sms_hangs():
     hangs = pd.read_sql(h.statement, conn) # requery dataset in case, create_sms and schedule_sms are being run in same script
     for user_id in hangs.user_id_1.unique():
-        used_schedule = get_schedule(user_id, live_schedules)
+        used_schedule = get_schedule(user_id)
         attempt_slots = sms_slots
 
         # no schedule

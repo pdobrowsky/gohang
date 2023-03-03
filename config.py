@@ -22,3 +22,5 @@ class Config(object):
     ALLOW_SIGNUP = True
     TWILIO_SID = os.environ.get('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH = os.environ.get('TWILIO_AUTH_TOKEN')
+    TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
+    ADMIN_NUMBER = os.environ.get('ADMIN_NUMBER')

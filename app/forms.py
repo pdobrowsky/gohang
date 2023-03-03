@@ -1,12 +1,11 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
+from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField, TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from wtforms.fields import DateField
 from app.models import User
 from datetime import datetime
 
 import phonenumbers
-import collections
 
 def check_phone_number(phone_number):
     try:
@@ -107,6 +106,12 @@ class FriendForm(FlaskForm):
 
     def validate_phone_number(self, phone_number):
         check_phone_number(phone_number)
+
+class ContactForm(FlaskForm):
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=30)])
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    message = TextAreaField(validators=[DataRequired(), Length(min=1, max=280)])
+    submit = SubmitField('Submit')
 
 class ScheduleForm(FlaskForm):
     submit = SubmitField('Submit')

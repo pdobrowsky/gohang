@@ -1,12 +1,13 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
-from app import app, db
-from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm
+from app import app, db, sms_client
+from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
 from datetime import datetime
 from json import dumps
+from twilio.twiml.messaging_response import MessagingResponse
 
 import collections
 
@@ -20,8 +21,13 @@ def add_friend(form):
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
     elif user == current_user: 
         flash('You can\'t friend yourself!')
+        return None
     elif current_user.is_friend(user):
         flash('You\'ve already added {} as a friend!'.format(form.name.data))
+        return None
+    elif form.phone_number.data == app.config['TWILIO_NUMBER']:
+        flash('You can\'t friend our chatbot Iris!')
+        return None
 
     friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
     db.session.add(friend)
@@ -225,3 +231,39 @@ def reset_password(token):
         
         return redirect(url_for('login'))
     return render_template('reset_password.html', form=form)
+
+@app.route('/sms', methods=['GET', 'POST'])
+def incoming_sms():
+    resp = MessagingResponse()
+
+    r_message = request.values.get('Body', None)
+    r_sender = request.values.get('From', None)
+    # Add a message
+    resp.message("learn more at https://microblog-pdobrowsky.herokuapp.com")
+
+    return str(resp)
+
+@app.route('/contact', methods=['GET','POST'])
+def contact():
+    # update to check if there is a logged in user in the future
+    form = ContactForm()
+    message_template = "Hi,\nSomeone named {} posted the following on the contact page:\n\n{}\n\nTheir email is {}\n -Iris"
+
+    if form.validate_on_submit():
+        name = form.name.data
+        message = form.message.data
+        email = form.email.data
+        sms_client.messages.create(
+                     body=message_template.format(name, message, email),
+                     from_=app.config['TWILIO_NUMBER'],
+                     to=app.config['ADMIN_NUMBER']
+                 )
+        
+        flash('Thanks for reaching out!')
+        return redirect(url_for('login'))
+
+    return render_template('contact.html', title='Contact', form=form)
+
+@app.route('/about')
+def about():
+    return render_template('about.html', title='About')
