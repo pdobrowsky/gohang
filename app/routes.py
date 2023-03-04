@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
-from app import app, db, sms_client
+from app import app, db, sms_client, messager
 from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
@@ -238,10 +238,10 @@ def incoming_sms():
 
     r_message = request.values.get('Body', None)
     r_sender = request.values.get('From', None)
-    # Add a message
-    resp.message("learn more at https://microblog-pdobrowsky.herokuapp.com")
 
-    return str(resp)
+    messager.handle_responses(r_sender, r_message)
+
+    return 'OK!'
 
 @app.route('/contact', methods=['GET','POST'])
 def contact():
@@ -253,11 +253,9 @@ def contact():
         name = form.name.data
         message = form.message.data
         email = form.email.data
-        sms_client.messages.create(
-                     body=message_template.format(name, message, email),
-                     from_=app.config['TWILIO_NUMBER'],
-                     to=app.config['ADMIN_NUMBER']
-                 )
+        message = message_template.format(name, message, email)
+
+        messager.send(message, app.config['ADMIN_NUMBER'])
         
         flash('Thanks for reaching out!')
         return redirect(url_for('login'))

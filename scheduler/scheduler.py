@@ -26,26 +26,28 @@ f = Friend.query
 s = Schedule.query
 h = Hang.query
 
-users = pd.read_sql(u.statement, conn)
-friends = pd.read_sql(f.statement, conn)
-schedules = pd.read_sql(s.statement, conn)
-hangs = pd.read_sql(h.statement, conn)
-
 # DEFINING CONSTANTS FOR THE RUN
 sms_slots = 2 # number of slots to send SMS users
 fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
 
+def get_scope():
+    # returns weekday and week to consider
+    current_week = dt.datetime.utcnow().isocalendar().week
+    weekday = dt.datetime.utcnow().weekday()
+    is_sunday = weekday == 6 # scheduler targets the week ahead if it's Sunday
 
-current_week = dt.datetime.utcnow().isocalendar().week
-weekday = dt.datetime.utcnow().weekday()
-is_sunday = weekday == 6 # scheduler targets the week ahead if it's Sunday
+    if is_sunday:
+        attempt_week = current_week + 1
+        attempt_weekday = 0
+    else:
+        attempt_week = current_week
+        attempt_weekday = weekday + 1
 
-if is_sunday:
-    attempt_week = current_week + 1
-    attempt_weekday = 0
-else:
-    attempt_week = current_week
-    attempt_weekday = weekday + 1
+    return {'attempt_week':attempt_week,'attempt_weekday':attempt_weekday}
+
+scope = get_scope()
+attempt_week = scope['attempt_week']
+attempt_weekday = scope['attempt_weekday']
 
 weekday_filter = collections.defaultdict(dict) # a schedule that's intersected to clean up availability based on where we are in the week
 empty_schedule = collections.defaultdict(dict) # a helper object in a lot of places
@@ -88,8 +90,8 @@ def sched_from_string(sched):
 def union_schedules(hangs):
     unioned_schedules = empty_schedule.copy()
 
-    for hang in hangs:
-        sched = sched_from_string(hang.schedule.values[0])
+    for index, row in hangs.iterrows():
+        sched = sched_from_string(row.schedule)
         unioned_schedules = unioned_schedules | sched
 
     return unioned_schedules
@@ -106,38 +108,38 @@ def melt_schedule(sched):
 # add relation type to friend table
 
 # SMS Friends - one direction
-friends = friends # for now, eventually will be the inverse of the above
 
 
-# WHO WILL HANG OUT
-# now lets do some pre-processing on the hangs to check how we're going to handle them
-confirmed_hangs = hangs[hangs.state == 'confirmed']
-recent_hangs = confirmed_hangs.pivot_table(index=['user_id_1', 'user_id_2'], 
-                                            values=['week_of'], aggfunc=max).reset_index(inplace=True) # this needs to change when mutual hang friends gets introduced, friend_id
+# WHO WILL HANG OUT - now lets do some pre-processing on the hangs to check how we're going to handle them
+def get_friends_hangs():
+    friends = pd.read_sql(f.statement, conn)
+    hangs = pd.read_sql(h.statement, conn)
+    confirmed_hangs = hangs[hangs.state == 'confirmed']
+    recent_hangs = confirmed_hangs.pivot_table(index=['user_id_1', 'user_id_2'], 
+                                                values=['week_of'], aggfunc=max).reset_index() # this needs to change when mutual hang friends gets introduced, friend_id
 
-# get when they last hung
-if not confirmed_hangs.empty:
-    friends = friends.merge(recent_hangs.week_of, 
-                            left_on=['creator_user_id', 'friend_user_id'], right_on=['user_id_1', 'user_id_2'], how='inner')
-else:
-    friends['week_of'] = None
+    # get when they last hung
+    if not confirmed_hangs.empty:
+        friends = friends.merge(recent_hangs[['week_of','user_id_1','user_id_2']], 
+                                left_on=['creator_user_id', 'friend_user_id'], right_on=['user_id_1', 'user_id_2'], how='outer')
+    else:
+        friends['week_of'] = None
 
-friends['time_since_hang'] = attempt_week - friends['week_of']
-friends['attempt'] = friends.time_since_hang >= friends.cadence
+    friends['time_since_hang'] = attempt_week - friends['week_of']
+    friends['attempt'] = friends.time_since_hang >= friends.cadence
 
-# figure out the state of hangs for the week
-current_state_hangs = hangs[hangs.week_of == attempt_week]
+    # figure out the state of hangs for the week
+    current_state_hangs = hangs[hangs.week_of == attempt_week]
 
-if not current_state_hangs.empty:
-    friends_hangs = friends.merge(current_state_hangs[['user_id_1', 'user_id_2','state']], left_on=['creator_user_id', 'friend_user_id'], right_on=['user_id_1', 'user_id_2'], how='left')
-else:
-    friends_hangs = friends
-    friends_hangs['state'] = None
+    if not current_state_hangs.empty:
+        friends_hangs = friends.merge(current_state_hangs[['user_id_1', 'user_id_2','state']], left_on=['creator_user_id', 'friend_user_id'], right_on=['user_id_1', 'user_id_2'], how='left')
+    else:
+        friends_hangs = friends
+        friends_hangs['state'] = None
+
+    return friends_hangs
 
 # cleanup friends to the ones you want to try and schedule
-
-
-
 
 # LOG all the hangs to happen
 
@@ -145,6 +147,7 @@ else:
 # need to consider each week in future
 def create_sms_hangs():
     counter = 0
+    friends_hangs = get_friends_hangs()
 
     for index, row in friends_hangs.iterrows():
         if not row.state:
@@ -167,6 +170,7 @@ def create_sms_hangs():
 
 def schedule_sms_hangs():
     hangs = pd.read_sql(h.statement, conn) # requery dataset in case, create_sms and schedule_sms are being run in same script
+    users = pd.read_sql(u.statement, conn)
     for user_id in hangs.user_id_1.unique():
         used_schedule = get_schedule(user_id)
         attempt_slots = sms_slots

@@ -56,4 +56,6 @@ if not app.debug:
         app.logger.setLevel(logging.INFO)
         app.logger.info('Microblog startup')
 
+from scheduler import scheduler
+from messager import messager
 from app import routes, models, errors

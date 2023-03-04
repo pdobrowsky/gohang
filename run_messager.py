@@ -1,4 +1,4 @@
-from messager import messager
+from app import messager
 
 messager.attempt_new_prospects()
-messager.send_reminder()
+# add reminder to this in future
