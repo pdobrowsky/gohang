@@ -52,6 +52,7 @@ def accept(sender, message, attempt_week):
 
     hangs.state = 'confirmed' # NEED TO UPDATE THIS ONCE THERE IS SEPARATE CONFIRM LOGIC
     hangs.schedule = new_schedule.to_json()
+    hangs.updated_at = dt.datetime.utcnow()
     db.session.commit()
 
     return accept_body_base, day, time, user
@@ -70,6 +71,7 @@ def decline(sender,attempt_week):
     user = User.query.filter_by(phone_number=sender).first()
     hangs = Hang.query.filter_by(user_id_2=user.id, state='attempted', week_of=attempt_week).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
     hangs.state = 'declined'
+    hangs.updated_at = dt.datetime.utcnow()
     db.session.commit()
 
     return decline_body_base
