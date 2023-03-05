@@ -17,13 +17,13 @@ conn = db.engine.connect()
 gohang_number = app.config['TWILIO_NUMBER']
 admin_number = app.config['ADMIN_NUMBER']
 
-attempt_body_base = """Hi {}, Your friend {} was wondering whether you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Iris"""
-accept_body_base = """Yay! \U0001F60D Confirming now! \n-Iris"""
-decline_body_base = """Dang! \U0001F629 Maybe next time!\n-Iris"""
-confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Iris"""
-remind_body_base = """Hello! This is a reminder that you and {} are planning to hang on {}. Have fun! \U0001F37B \n-Iris"""
-help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Iris""".format(app.config['URL'])
-fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Iris\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Iris"""
+attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering whether you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
+accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
+decline_body_base = """Dang! \U0001F629 Maybe next time!\n-Luna"""
+confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Luna"""
+remind_body_base = """Hello! This is a reminder that you and {} are planning to hang on {}. Have fun! \U0001F37B \n-Luna"""
+help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
+fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -80,7 +80,7 @@ def handle_responses(sender, message):
     attempt_week = get_scope()['attempt_week']
     and_confirm = 0
 
-    if 'iris' in message.lower():
+    if 'luna' in message.lower():
         response = help_body
     elif not hang_state_usable(sender, attempt_week):
         response = fail_body

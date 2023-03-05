@@ -26,7 +26,7 @@ def add_friend(form):
         flash('You\'ve already added {} as a friend!'.format(form.name.data))
         return None
     elif form.phone_number.data == app.config['TWILIO_NUMBER']:
-        flash('You can\'t friend our chatbot Iris!')
+        flash('You can\'t friend our chatbot Luna!')
         return None
 
     friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
@@ -159,8 +159,8 @@ def signup():
             flash('Your account was created! Log in to start spending more time with friends')
             return redirect(url_for('login'))
         else:
-            flash('Sorry, you can\'t sign up at this time :( Waitlist coming soon!')
-            return redirect(url_for('index'))
+            flash('Sorry, you can\'t sign up at this time :( Reach out to us on the contact page to get added to the waitlist!')
+            return redirect(url_for('signup'))
 
     return render_template('signup.html', title='Sign Up', form=form)
 
@@ -247,7 +247,7 @@ def incoming_sms():
 def contact():
     # update to check if there is a logged in user in the future
     form = ContactForm()
-    message_template = "Hi,\nSomeone named {} posted the following on the contact page:\n\n{}\n\nTheir email is {}\n -Iris"
+    message_template = "Hi,\nSomeone named {} posted the following on the contact page:\n\n{}\n\nTheir email is {}\n -Luna"
 
     if form.validate_on_submit():
         name = form.name.data
