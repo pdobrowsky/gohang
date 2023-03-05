@@ -80,6 +80,10 @@ def get_live_schedules():
     schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
     live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
     live_schedules_time.reset_index(inplace=True)
+
+    if live_schedules_time.empty:
+        return live_schedules_time
+
     live_schedules = schedules.merge(live_schedules_time, left_on=['user_id','week_of','created_at'], right_on=['user_id','week_of','created_at'], how='inner')
 
     return live_schedules
