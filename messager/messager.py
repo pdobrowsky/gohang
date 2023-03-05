@@ -43,7 +43,7 @@ def accept(sender, message, attempt_week):
     slots = attempted_schedule[attempted_schedule.value == True]
 
     if avail > len(slots): # it doesn't exist
-        return fail_body
+        return fail_body, None, None, None
     
     slot = slots.iloc[avail - 1]
     day = slot['index']
@@ -95,11 +95,12 @@ def handle_responses(sender, message):
     send(response, sender)
 
     # only works for admin (just me) case and no separate confirm logic
-    if and_confirm:
-        message = confirm_body_base.format('Paul', day + " " + time)
-        send(message, sender)
-        message = confirm_body_base.format(user.first_name, day + " " + time)
-        send(message, admin_number)
+    if not response == fail_body:
+        if and_confirm:
+            message = confirm_body_base.format('Paul', day + " " + time)
+            send(message, sender)
+            message = confirm_body_base.format(user.first_name, day + " " + time)
+            send(message, admin_number)
 
 # PREP DATASET
 def get_current_attempts():
