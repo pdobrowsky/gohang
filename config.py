@@ -19,7 +19,7 @@ class Config(object):
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS') is not None
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER')
     ADMINS = ['pdbrosky@gmail.com']
-    ALLOW_SIGNUP = True
+    ALLOW_SIGNUP = False
     TWILIO_SID = os.environ.get('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH = os.environ.get('TWILIO_AUTH_TOKEN')
     TWILIO_NUMBER = os.environ.get('TWILIO_NUMBER')
