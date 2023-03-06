@@ -27,8 +27,12 @@ s = Schedule.query
 h = Hang.query
 
 # DEFINING CONSTANTS FOR THE RUN
-sms_slots = 2 # number of slots to send SMS users
 fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
+if fast_or_max == 'fast':
+    sms_slots = 2 # number of slots to send SMS users
+else:
+    sms_slots = 3
+
 
 def get_scope():
     # returns weekday and week to consider
@@ -81,7 +85,7 @@ def get_live_schedules():
     live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
     live_schedules_time.reset_index(inplace=True)
 
-    if live_schedules_time.empty:
+    if live_schedules_time.empty: # this line is kind of crap to avoid merge which will raise an error when there are no schedules
         return live_schedules_time
 
     live_schedules = schedules.merge(live_schedules_time, left_on=['user_id','week_of','created_at'], right_on=['user_id','week_of','created_at'], how='inner')
@@ -116,6 +120,7 @@ def melt_schedule(sched):
 
 # WHO WILL HANG OUT - now lets do some pre-processing on the hangs to check how we're going to handle them
 def get_friends_hangs():
+    # ADD CALCULATE PRIORITY
     friends = pd.read_sql(f.statement, conn)
     hangs = pd.read_sql(h.statement, conn)
     confirmed_hangs = hangs[hangs.state == 'confirmed']
