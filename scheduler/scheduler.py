@@ -28,11 +28,7 @@ h = Hang.query
 
 # DEFINING CONSTANTS FOR THE RUN
 fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
-if fast_or_max == 'fast':
-    sms_slots = 2 # number of slots to send SMS users
-else:
-    sms_slots = 3
-
+sms_slots = 3 # number of slots to send SMS users
 
 def get_scope():
     # returns weekday and week to consider
@@ -214,6 +210,7 @@ def schedule_sms_hangs():
         free_schedule = not_booked & weekday_filter & current_schedule
 
         # order their hangs by priority to attempt and that need to be attempted
+        # if haven't hung before, prio should be 1
         user_hangs = user_hangs[user_hangs.state == 'prospect']
         user_hangs = user_hangs.sort_values('priority', ascending=False, ignore_index=True)
 
