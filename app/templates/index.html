@@ -2,10 +2,11 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Hi, {{ current_user.username }}!</h1>
+    <h1>Hi, {{ current_user.first_name }}!</h1>
     {% if form %}
     <h3>Add Friend</h3>
         {% include '_add_friend.html' %}
     <br>
     {% endif %}
+    <h3>Upcoming Hangs</h3>
 {% endblock %}

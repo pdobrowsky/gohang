@@ -86,8 +86,11 @@ class EditProfileForm(FlaskForm):
                 raise ValidationError('This number is already taken.')
 
 class ResetPasswordRequestForm(FlaskForm):
-    email = StringField('Email', validators=[DataRequired(), Email()])
+    phone_number = StringField('Phone Number', validators=[DataRequired()])
     submit = SubmitField('Request Password Reset')
+
+    def validate_phone_number(self, phone_number):
+        check_phone_number(phone_number)
 
 class ResetPasswordForm(FlaskForm):
     password = PasswordField('Password', validators=[DataRequired()])

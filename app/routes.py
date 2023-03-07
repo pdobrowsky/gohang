@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
-from app import app, db, sms_client, messager
+from app import app, db, messager
 from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
@@ -201,15 +201,20 @@ def edit_profile():
 def reset_password_request():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
+    
     form = ResetPasswordRequestForm()
+
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data).first()
-        if user:
-            send_password_reset_email(user)
-        flash('Check your email for the instructions to reset your password')
+        user = User.query.filter_by(phone_number=form.phone_number.data).first()
+        if user and user.user_type == 'hang':
+            token = user.get_reset_password_token()
+            url = url_for('reset_password', token=token, _external=True)
+            reset_password_msg = "Hi {}, to reset your password click on the following link:\n\n{}\n\nIf you have not requested a password reset simply ignore this message.\n-Luna".format(user.first_name, url)
+            messager.send(reset_password_msg, user.phone_number)
+            
+        flash('Check your texts for instructions to reset your password!')
         return redirect(url_for('login'))
-    return render_template('reset_password_request.html',
-                           title='Reset Password', form=form)
+    return render_template('reset_password_request.html',title='Reset Password', form=form)
 
 @app.route('/reset_password/<token>', methods=['GET', 'POST'])
 def reset_password(token):
