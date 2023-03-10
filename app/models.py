@@ -53,7 +53,7 @@ class User(UserMixin, db.Model):
         self.friends.remove(user)
 
     def upcoming_hangs(self, week_of):
-        hangs = db.session.query(Hang, User).filter(Hang.user_id_1==self.id, Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2))
+        hangs = db.session.query(Hang, User).filter(Hang.user_id_1==self.id, Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2)).order_by(Hang.updated_at.desc())
         return hangs
 
     @staticmethod
