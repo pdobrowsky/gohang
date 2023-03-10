@@ -46,7 +46,8 @@ def before_request():
 def index():
     form = FriendForm()
 
-    hangs = current_user.upcoming_hangs()
+    # hangs = current_user.upcoming_hangs()
+    hangs = None
 
     if form.validate_on_submit():
         add_friend(form)
