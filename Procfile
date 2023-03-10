@@ -1,1 +1,1 @@
-web: flask db upgrade; gunicorn hangtime:app
+web: flask db upgrade; gunicorn --workers 1 --threads 3 hangtime:app

@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 from time import time
+# from scheduler.scheduler import get_scope
 
 # making a friends table up here like followers would make things better in some ways probably, and clean up logic here and in routes
 
@@ -56,6 +57,10 @@ class User(UserMixin, db.Model):
     def unfriend(self, user):
         self.friends.remove(user)
 
+    # def upcoming_hangs(self, week_of):
+    #     week_of = get_scope()['attempt_week']
+    #     hangs = Hang.query.filter_by(user_id_1=self.id, week_of=week_of)
+
     @staticmethod
     def verify_reset_password_token(token):
         try:
@@ -99,9 +104,8 @@ class Schedule(db.Model):
     def __repr__(self):
         return '<Schedule user_id: {} created_at: {} avails: {} week of: {}>'.format(self.user_id, self.created_at, self.avails, self.week_of)
     
-# need to start hangs model, handle coldstart
 class Hang(db.Model):
-    # need friend ID
+    # need friend ID?
     id = db.Column(db.Integer, primary_key=True)
     user_id_1 = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     user_id_2 = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
@@ -111,11 +115,8 @@ class Hang(db.Model):
     week_of = db.Column(db.Integer, index=True)
     state = db.Column(db.String(255), index=True)
     priority = db.Column(db.Float(), index=True)
-    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id'))
-
-    def get_slots(self):
-        pass
-        # will return a string version of schedule 
+    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # remove? it's not used because we always just find the most recent
+    reminded = db.Column(db.Boolean, index=True, default=False)
 
     def __repr__(self):
         return '<Hang>'

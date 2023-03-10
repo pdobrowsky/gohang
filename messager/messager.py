@@ -151,6 +151,7 @@ def attempt_new_prospects():
 # FUTURE METHODS
 def reminder():
     # send a reminder to both parties; punt
+    # if confirmed, reminded is false, is week of and the day is the day before the hang
     pass
 
 def request_hangs():

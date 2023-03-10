@@ -46,11 +46,13 @@ def before_request():
 def index():
     form = FriendForm()
 
+    hangs = current_user.upcoming_hangs()
+
     if form.validate_on_submit():
         add_friend(form)
         return redirect(url_for('index'))
 
-    return render_template('index.html', title='Home', form=form)
+    return render_template('index.html', title='Home', form=form, hangs=hangs)
 
 @app.route('/friends', methods=['GET','POST'])
 @login_required

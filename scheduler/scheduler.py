@@ -19,12 +19,7 @@ from app.models import User, Friend, Schedule, Hang
 my_context = app.app_context()
 my_context.push()
 conn = db.engine.connect()
-
-# BASE DATA INGESTION
-u = User.query.filter_by(user_type="hang")
-f = Friend.query
-s = Schedule.query
-h = Hang.query
+app.app_context()
 
 # DEFINING CONSTANTS FOR THE RUN
 fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
@@ -75,7 +70,7 @@ def get_schedule(user_id):
     return live_schedules[live_schedules.user_id == user_id]
 
 def get_live_schedules():
-    schedules = pd.read_sql(s.statement, conn)
+    schedules = pd.read_sql(Schedule.query.statement, conn)
     schedules['week_of'] = schedules['week_of'].apply(lambda x: x.isocalendar().week)
     schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
     live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
@@ -117,8 +112,8 @@ def melt_schedule(sched):
 # WHO WILL HANG OUT - now lets do some pre-processing on the hangs to check how we're going to handle them
 def get_friends_hangs():
     # ADD CALCULATE PRIORITY
-    friends = pd.read_sql(f.statement, conn)
-    hangs = pd.read_sql(h.statement, conn)
+    friends = pd.read_sql(Friend.query.statement, conn)
+    hangs = pd.read_sql(Hang.query.statement, conn)
     confirmed_hangs = hangs[hangs.state == 'confirmed']
     recent_hangs = confirmed_hangs.pivot_table(index=['user_id_1', 'user_id_2'], 
                                                 values=['week_of'], aggfunc=max).reset_index() # this needs to change when mutual hang friends gets introduced, friend_id
@@ -174,8 +169,8 @@ def create_sms_hangs():
 
 
 def schedule_sms_hangs():
-    hangs = pd.read_sql(h.statement, conn) # requery dataset in case, create_sms and schedule_sms are being run in same script
-    users = pd.read_sql(u.statement, conn)
+    hangs = pd.read_sql(Hang.query.statement, conn) # requery dataset in case, create_sms and schedule_sms are being run in same script
+    users = pd.read_sql(User.query.filter_by(user_type='hang').statement, conn)
     for user_id in hangs.user_id_1.unique():
         used_schedule = get_schedule(user_id)
         attempt_slots = sms_slots
