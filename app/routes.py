@@ -1,7 +1,7 @@
 from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
-from app import app, db, messager
+from app import app, db, messager, scheduler
 from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
@@ -10,6 +10,9 @@ from json import dumps
 from twilio.twiml.messaging_response import MessagingResponse
 
 import collections
+
+# coloring hangs 
+colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "declined":"warning", "canceled":"danger"}
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
@@ -46,14 +49,13 @@ def before_request():
 def index():
     form = FriendForm()
 
-    # hangs = current_user.upcoming_hangs()
-    hangs = None
+    hangs = current_user.upcoming_hangs(scheduler.get_scope()['attempt_week'])
 
     if form.validate_on_submit():
         add_friend(form)
         return redirect(url_for('index'))
 
-    return render_template('index.html', title='Home', form=form, hangs=hangs)
+    return render_template('index.html', title='Home', form=form, hangs=hangs, colors=colors)
 
 @app.route('/friends', methods=['GET','POST'])
 @login_required

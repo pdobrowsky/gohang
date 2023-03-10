@@ -9,4 +9,24 @@
     <br>
     {% endif %}
     <h3>Upcoming Hangs</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>State</th>
+                <th>Slot</th>
+                <th>Options</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for hang in hangs %}
+            <tr class="{{ colors[hang[0].state] }}">
+                <td>{{ hang[1].first_name }}</td>
+                <td>{{ hang[0].state }}</td>
+                <td>{{ hang[0].finalized_slot }}</td>
+                <td>Cancel or Skip dependent on state</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
 {% endblock %}

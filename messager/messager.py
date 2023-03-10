@@ -53,6 +53,7 @@ def accept(sender, message, attempt_week):
     hangs.state = 'confirmed' # NEED TO UPDATE THIS ONCE THERE IS SEPARATE CONFIRM LOGIC
     hangs.schedule = new_schedule.to_json()
     hangs.updated_at = dt.datetime.utcnow()
+    hangs.finalized_slot = day + " " + time
     db.session.commit()
 
     return accept_body_base, day, time, user

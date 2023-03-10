@@ -6,7 +6,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 from time import time
-# from scheduler.scheduler import get_scope
 
 # making a friends table up here like followers would make things better in some ways probably, and clean up logic here and in routes
 
@@ -46,10 +45,6 @@ class User(UserMixin, db.Model):
             {'reset_password': self.id, 'exp': time() + expires_in}, 
             app.config['SECRET_KEY'], 
             algorithm='HS256')
-    
-    # def friend(self, user):
-    #     if not self.is_friend(user):
-    #         self.followed.append(user)
 
     def is_friend(self, user):
         return self.friends.filter_by(friend_user_id=user.id).count() > 0
@@ -57,9 +52,9 @@ class User(UserMixin, db.Model):
     def unfriend(self, user):
         self.friends.remove(user)
 
-    # def upcoming_hangs(self, week_of):
-    #     week_of = get_scope()['attempt_week']
-    #     hangs = Hang.query.filter_by(user_id_1=self.id, week_of=week_of)
+    def upcoming_hangs(self, week_of):
+        hangs = db.session.query(Hang, User).filter(Hang.user_id_1==self.id, Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2))
+        return hangs
 
     @staticmethod
     def verify_reset_password_token(token):
@@ -72,7 +67,7 @@ class User(UserMixin, db.Model):
     
 class Friend(db.Model):
     # add relation type, sms or hang
-    # add "live" - basically to protect against 1 way hang:hang friends
+    # add "live" - basically to protect against 1 way hang:hang friends?
     id = db.Column(db.Integer, primary_key=True)
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     friend_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
@@ -117,6 +112,7 @@ class Hang(db.Model):
     priority = db.Column(db.Float(), index=True)
     schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # remove? it's not used because we always just find the most recent
     reminded = db.Column(db.Boolean, index=True, default=False)
+    finalized_slot = db.Column(db.String(255))
 
     def __repr__(self):
         return '<Hang>'
