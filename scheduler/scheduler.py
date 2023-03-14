@@ -154,13 +154,14 @@ def create_sms_hangs():
             if row.attempt or not row.time_since_hang == row.time_since_hang:
                 used_schedule = get_schedule(row.creator_user_id)
 
-                # prioritizes friends you have not scheduled with yet over those you have (new friends it attempts next week)
-                if not row.attempt:
-                    priority = 1 # value for friends that you have not yet hung with
-                else:
-                    priority = 1 - (row.cadence/(row.time_since_hang + 1)) # value for friends that you have
-
+                # does nothing if you have no schedule for the week
                 if not used_schedule.empty:
+                    # prioritizes friends you have not scheduled with yet over those you have (new friends it attempts next week)
+                    if not row.attempt:
+                        priority = 1 # value for friends that you have not yet hung with
+                    else:
+                        priority = 1 - (row.cadence/(row.time_since_hang + 1)) # value for friends that you have
+
                     hang_to_add = Hang(user_id_1= row.creator_user_id , user_id_2=row.friend_user_id, 
                                     state='prospect', week_of=attempt_week, priority=priority, schedule_id=int(used_schedule.id.iloc[0]))
                     
@@ -209,7 +210,7 @@ def schedule_sms_hangs():
         not_booked = ~in_flight_schedule
         free_schedule = not_booked & weekday_filter & current_schedule
 
-        # order their hangs by priority to attempt and that need to be attempted
+        # order their hangs by priority to attempt, cadence breaks ties (those you want to see more often win)
         user_hangs = user_hangs[user_hangs.state == 'prospect']
         user_hangs = user_hangs.sort_values(by=['priority','cadence'], ascending=[False,True], ignore_index=True)
 
