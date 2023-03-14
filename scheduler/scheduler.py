@@ -153,13 +153,18 @@ def create_sms_hangs():
         if not row.state:
             if row.attempt or not row.time_since_hang == row.time_since_hang:
                 used_schedule = get_schedule(row.creator_user_id)
-                # need to set priority intelligently in the future
+
+                # prioritizes friends you have not scheduled with yet over those you have (new friends it attempts next week)
+                if not row.attempt:
+                    priority = 1 # value for friends that you have not yet hung with
+                else:
+                    priority = 1 - (row.cadence/(row.time_since_hang + 1)) # value for friends that you have
 
                 if not used_schedule.empty:
                     hang_to_add = Hang(user_id_1= row.creator_user_id , user_id_2=row.friend_user_id, 
-                                    state='prospect', week_of=attempt_week, priority=1.0000, schedule_id=int(used_schedule.id.iloc[0]))
+                                    state='prospect', week_of=attempt_week, priority=priority, schedule_id=int(used_schedule.id.iloc[0]))
                     
-                    # for any in the current week that are still in prospect, should also update schedule ID to be used schedule
+                    # consider getting rid of schedule ID since it's not used/updated?
                     db.session.add(hang_to_add)
                     counter += 1                    
 
@@ -205,9 +210,8 @@ def schedule_sms_hangs():
         free_schedule = not_booked & weekday_filter & current_schedule
 
         # order their hangs by priority to attempt and that need to be attempted
-        # if haven't hung before, prio should be 1
         user_hangs = user_hangs[user_hangs.state == 'prospect']
-        user_hangs = user_hangs.sort_values('priority', ascending=False, ignore_index=True)
+        user_hangs = user_hangs.sort_values(by=['priority','cadence'], ascending=[False,True], ignore_index=True)
 
         for index, row in user_hangs.iterrows():
             melted_sched = melt_schedule(free_schedule)
