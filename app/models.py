@@ -114,5 +114,7 @@ class Hang(db.Model):
     reminded = db.Column(db.Boolean, index=True, default=False)
     finalized_slot = db.Column(db.String(255))
 
+    # need retry and reminded field
+
     def __repr__(self):
         return '<Hang>'

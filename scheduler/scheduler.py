@@ -15,15 +15,11 @@ from app.models import User, Friend, Schedule, Hang
 # act as if hang is empty right now because it is, need to add to models
 # going to need to have eddit schedule eventually
 
-# DB CONNECTION
+# DB CONNECTION - Can I put this in the functions instead?
 my_context = app.app_context()
 my_context.push()
 conn = db.engine.connect()
 app.app_context()
-
-# DEFINING CONSTANTS FOR THE RUN
-fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
-sms_slots = 3 # number of slots to send SMS users
 
 def get_scope():
     # returns weekday and week to consider
@@ -40,9 +36,12 @@ def get_scope():
 
     return {'attempt_week':attempt_week,'attempt_weekday':attempt_weekday}
 
+# DEFINING CONSTANTS FOR THE RUN
 scope = get_scope()
 attempt_week = scope['attempt_week']
 attempt_weekday = scope['attempt_weekday']
+fast_or_max = 'fast' # determines how aggressive the scheduler is. fast will try to move as many hangs to attempted as fast as possible but might send less slots, max will go slow to send the most slots
+sms_slots = 3 # number of slots to send SMS users
 
 weekday_filter = collections.defaultdict(dict) # a schedule that's intersected to clean up availability based on where we are in the week
 empty_schedule = collections.defaultdict(dict) # a helper object in a lot of places
@@ -177,6 +176,7 @@ def create_sms_hangs():
 def schedule_sms_hangs():
     hangs = pd.read_sql(Hang.query.statement, conn) # requery dataset in case, create_sms and schedule_sms are being run in same script
     users = pd.read_sql(User.query.filter_by(user_type='hang').statement, conn)
+
     for user_id in hangs.user_id_1.unique():
         used_schedule = get_schedule(user_id)
         attempt_slots = sms_slots
@@ -212,7 +212,7 @@ def schedule_sms_hangs():
 
         # order their hangs by priority to attempt, cadence breaks ties (those you want to see more often win)
         user_hangs = user_hangs[user_hangs.state == 'prospect']
-        user_hangs = user_hangs.sort_values(by=['priority','cadence'], ascending=[False,True], ignore_index=True)
+        user_hangs = user_hangs.sort_values(by=['priority'], ascending=[False], ignore_index=True)
 
         for index, row in user_hangs.iterrows():
             melted_sched = melt_schedule(free_schedule)
@@ -232,7 +232,7 @@ def schedule_sms_hangs():
             print('go')
 
             # create a schedule using the empty schedule, and update the free schedule
-            top_slots = melted_sched[melted_sched.value == True].iloc[:attempt_slots]
+            top_slots = melted_sched[melted_sched.value == True].sample(attempt_slots)
             attempt_schedule = empty_schedule.copy()
             
             for index2, row2 in top_slots.iterrows():
