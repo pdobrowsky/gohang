@@ -49,7 +49,7 @@ class SignUpForm(FlaskForm):
         user = User.query.filter_by(phone_number=phone_number.data).first()
 
         if user is not None:
-            raise ValidationError('This username is already taken.')
+            raise ValidationError('This phone number is already taken.')
 
 class EditProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
