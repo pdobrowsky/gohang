@@ -7,7 +7,7 @@ from flask_login import UserMixin
 from hashlib import md5
 from time import time
 
-# making a friends table up here like followers would make things better in some ways probably, and clean up logic here and in routes
+# !!!!need to update week of logic to account for year changeover in future
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -92,7 +92,7 @@ class Schedule(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, index=True)
-    week_of = db.Column(db.DateTime, index=True)
+    week_of_int = db.Column(db.Integer, index=True)
     avails = db.Column(db.Text)
     processed_at = db.Column(db.DateTime, index=True)
 

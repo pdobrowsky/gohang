@@ -108,11 +108,11 @@ def schedule():
 
         avails = dumps(avails)
 
-        schedule = Schedule(user_id = current_user.id, week_of = form.dt.data, avails=avails)
+        schedule = Schedule(user_id = current_user.id, week_of_int = int(form.week.data[-2:]), avails=avails)
         db.session.add(schedule)
         db.session.commit()
 
-        flash("Your schedule for the week of {} was added! :D".format(form.dt.data))
+        flash("Your schedule for the week of {} was added! :D".format(form.week.data))
         redirect(url_for('schedule'))
 
     return render_template('schedule.html', title='Schedule', form=form)

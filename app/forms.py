@@ -118,10 +118,10 @@ class ContactForm(FlaskForm):
 
 class ScheduleForm(FlaskForm):
     submit = SubmitField('Submit')
-    dt = DateField('DatePicker', format='%Y-%m-%d', validators=[DataRequired()])
+    week = StringField('Week', validators=[DataRequired()])
 
-    def validate_dt(self, dt):
-        if datetime.utcnow().date().isocalendar().week > dt.data.isocalendar().week:
+    def validate_dt(self, week):
+        if datetime.utcnow().date().isocalendar().week > int(week.data[-2:]):
             raise ValidationError("That week is in the past")
 
 for time in ['Morning', 'Afternoon', 'Evening']:

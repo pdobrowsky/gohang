@@ -7,13 +7,15 @@ import calendar
 from app import db, app
 from app.models import User, Friend, Schedule, Hang
 
+# !!!!!!need to update week of logic to account for year changeover in future
+
 # clean up
 # needs to process schedules to create possible hangs
 # needs to write those results to new hangs table, update processed_at in schedule
 # it runs every day (because you can update your schedule), but on Sundays it does the week ahead, rest of week it only does current week (for now)=
 # ignore those already tried to schedule with since all on sms atm
 # act as if hang is empty right now because it is, need to add to models
-# going to need to have eddit schedule eventually
+# going to need to have edit schedule eventually
 
 # DB CONNECTION - Can I put this in the functions instead?
 my_context = app.app_context()
@@ -70,7 +72,7 @@ def get_schedule(user_id):
 
 def get_live_schedules():
     schedules = pd.read_sql(Schedule.query.statement, conn)
-    schedules['week_of'] = schedules['week_of'].apply(lambda x: x.isocalendar().week)
+    schedules['week_of'] = schedules['week_of_int']
     schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
     live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
     live_schedules_time.reset_index(inplace=True)
@@ -211,7 +213,7 @@ def schedule_sms_hangs():
         free_schedule = not_booked & weekday_filter & current_schedule
 
         # order their hangs by priority to attempt, cadence breaks ties (those you want to see more often win)
-        user_hangs = user_hangs[user_hangs.state == 'prospect']
+        user_hangs = user_hangs[(user_hangs.state == 'prospect')]
         user_hangs = user_hangs.sort_values(by=['priority'], ascending=[False], ignore_index=True)
 
         for index, row in user_hangs.iterrows():

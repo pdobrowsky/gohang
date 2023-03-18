@@ -6,13 +6,14 @@
     <form action="" method="post">
         {{ form.hidden_tag() }}
         <p><b>Week of:</b>
-        {{ form.dt(class='datepicker') }}
-        {% for error in form.dt.errors %}
+        {{ form.week(class='datepicker', type='week') }}
+        {% for error in form.week.errors %}
         <span style="color: red;">[{{ error }}]</span>
         {% endfor %}
         <p><b>FYI: Weeks run Monday to Sunday</b>
         <p><b>FYI: If you submit a week twice it overwrites the previous input, sorry! &#128517;</b>
-        <p><b>FYI: Submitted schedules don't impact scheduled hangs</b>
+        <p><b>FYI: Newly submitted schedules don't impact hangs that are already being/are scheduled</b>
+        <p><b>FYI: If you submit a schedule after scheduler runs but before messager runs, the older schedule will be used</b>
         <table class="table table-hover">
             <thead>
                 <tr>
