@@ -19,11 +19,12 @@ admin_number = app.config['ADMIN_NUMBER']
 
 attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering whether you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
 accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
-decline_body_base = """Dang! \U0001F629 Maybe next time!\n-Luna"""
+decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y, otherwise you can just ignore this and I'll try again next week!\n-Luna"""
 confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Luna"""
 remind_body_base = """Hello! This is a reminder that you and {} are planning to hang on {}. Have fun! \U0001F37B \n-Luna"""
 help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
+retry_body = """Ok great! I'll send some more availability when I know more!\nLuna"""
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -32,19 +33,18 @@ def send(message, number):
                 from_=gohang_number,
                 to=number)
 
-def accept(sender, message, attempt_week):
+def accept(hangs, message):
     new_schedule = empty_schedule.copy()
-    user = User.query.filter_by(phone_number=sender).first()
-    hangs = Hang.query.filter_by(user_id_2=user.id, state='attempted', week_of=attempt_week).first()
     avail = int(message)
 
     attempted_schedule = hangs.schedule
     attempted_schedule = melt_schedule(sched_from_string(attempted_schedule))
     slots = attempted_schedule[attempted_schedule.value == True]
 
-    if avail > len(slots): # it doesn't exist
-        return fail_body, None, None, None
+    if avail > len(slots): # their message is not a valid slot
+        return fail_body, None, None
     
+    # change the accepted schedule to only have the accepted slot
     slot = slots.iloc[avail - 1]
     day = slot['index']
     time = slot['variable']
@@ -56,42 +56,51 @@ def accept(sender, message, attempt_week):
     hangs.finalized_slot = day + " " + time
     db.session.commit()
 
-    return accept_body_base, day, time, user
-            
-def hang_state_usable(sender, attempt_week):
-    # checks if there are hangs to respond to
-    user = User.query.filter_by(phone_number=sender).first()
-    hangs = Hang.query.filter_by(user_id_2=user.id, state='attempted', week_of=attempt_week).all()
+    return accept_body_base, day, time
 
-    if len(hangs) > 0:
-        return True
-    else:
-        return False
-
-def decline(sender,attempt_week):
-    user = User.query.filter_by(phone_number=sender).first()
-    hangs = Hang.query.filter_by(user_id_2=user.id, state='attempted', week_of=attempt_week).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
+def decline(hangs):
     hangs.state = 'declined'
+    hangs.retry = False
     hangs.updated_at = dt.datetime.utcnow()
     db.session.commit()
 
     return decline_body_base
 
+def retry(hangs):
+    hangs.retry = True
+    db.session.commit()
+
+    return retry_body
+
 def handle_responses(sender, message):
+    # should I move getting the user and hang to the top? Then better understand what is possible here before moving into the if statements
+    user = User.query.filter_by(phone_number=sender).first()
+    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempt','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
     attempt_week = get_scope()['attempt_week']
     and_confirm = 0
 
-    if 'luna' in message.lower():
+    if 'luna' in message.lower(): # should I make this a regex? help
         response = help_body
-    elif not hang_state_usable(sender, attempt_week):
+    elif len(hangs) < 1: # if they respond to a hang that doesn't exist
         response = fail_body
-    elif message == 'N':
-        response = decline(sender, attempt_week)
-    elif message.isdigit():
-        response, day, time, user = accept(sender,message, attempt_week)
-        and_confirm = 1
-    else:
-        response = fail_body
+    else: # if they respond to a hang that exists
+        if message == 'Y':
+            # if they say yes check if they actually declined before, if so, set retry to true
+            if hangs.state == 'declined':
+                response = retry(hangs)
+            else:
+                response = fail_body
+        elif message == 'N':
+            # is there something to decline?
+            if hangs.state == 'attempted':
+                response = decline(hangs)
+            else:
+                response = fail_body
+        elif message.isdigit():
+            response, day, time = accept(hangs, message)
+            and_confirm = 1
+        else:
+            response = fail_body
 
     send(response, sender)
 

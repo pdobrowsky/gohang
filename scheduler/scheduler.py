@@ -212,11 +212,56 @@ def schedule_sms_hangs():
         not_booked = ~in_flight_schedule
         free_schedule = not_booked & weekday_filter & current_schedule
 
-        # order their hangs by priority to attempt, cadence breaks ties (those you want to see more often win)
-        user_hangs = user_hangs[(user_hangs.state == 'prospect')]
-        user_hangs = user_hangs.sort_values(by=['priority'], ascending=[False], ignore_index=True)
+        # cadence should break priority ties in the future
+        # retry declined hangs that want retry first, before new prospects, limits the number of people that are tried in one week
+        user_hangs_retry = user_hangs[(user_hangs.state == 'declined') & (user_hangs.retry == True)]
+        user_hangs_retry = user_hangs_retry.sort_values(by=['priority'], ascending=[False], ignore_index=True)
 
-        for index, row in user_hangs.iterrows():
+        print('retrying {} declined hangs'.format(len(user_hangs_retry)))
+        for index, row in user_hangs_retry.iterrows():
+            old_schedule = sched_from_string(row.schedule)
+            retry_free_schedule = free_schedule & ~old_schedule # only try the slots not already tried
+
+            # below this is the same as the new prospects?
+            melted_sched = melt_schedule(retry_free_schedule)
+            melted_sched = melted_sched[melted_sched.value == True]
+
+            if melted_sched.empty:
+                print('out of slots')
+                break
+            elif len(melted_sched) < sms_slots:
+                if fast_or_max == 'max':
+                    print('stopping to enforce max')
+                    break
+                else:
+                    print('reducing slots to go fast')
+                    attempt_slots = len(melted_sched)
+            
+            print('go')
+
+            # create a schedule using the empty schedule, and update the free schedule
+            top_slots = melted_sched[melted_sched.value == True].sample(attempt_slots) # in the future grab by value of the slots
+            attempt_schedule = empty_schedule.copy()
+            
+            for index2, row2 in top_slots.iterrows():
+                day = row2['index']
+                time = row2['variable']
+
+                attempt_schedule.at[day,time] = True
+                free_schedule.at[day,time] = False
+
+            hang_to_update = Hang.query.filter_by(id=row.id).first()
+            hang_to_update.state = 'prospect' # this is the only difference from the new prospects
+            hang_to_update.schedule = attempt_schedule.to_json()
+            hang_to_update.updated_at = dt.datetime.utcnow()
+            db.session.commit()
+
+        # now do the new prospects
+        user_hangs_prospects = user_hangs[(user_hangs.state == 'prospect')]
+        user_hangs_prospects = user_hangs_prospects.sort_values(by=['priority'], ascending=[False], ignore_index=True)
+
+        print('trying {} new prospects'.format(len(user_hangs_prospects)))
+        for index, row in user_hangs_prospects.iterrows():
             melted_sched = melt_schedule(free_schedule)
             melted_sched = melted_sched[melted_sched.value == True]
 

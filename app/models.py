@@ -113,8 +113,8 @@ class Hang(db.Model):
     schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # remove? it's not used because we always just find the most recent
     reminded = db.Column(db.Boolean, index=True, default=False)
     finalized_slot = db.Column(db.String(255))
-
-    # need retry and reminded field
+    retry = db.Column(db.Boolean, index=True, default=False)
+    reminded = db.Column(db.Boolean, index=True, default=False)
 
     def __repr__(self):
         return '<Hang>'
