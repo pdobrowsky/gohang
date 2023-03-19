@@ -76,7 +76,7 @@ def handle_responses(sender, message):
     # should I move getting the user and hang to the top? Then better understand what is possible here before moving into the if statements
     user = User.query.filter_by(phone_number=sender).first()
     attempt_week = get_scope()['attempt_week']
-    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempt','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
+    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempted','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
     and_confirm = 0
 
     if 'luna' in message.lower(): # should I make this a regex? help
