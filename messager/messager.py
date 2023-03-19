@@ -81,7 +81,7 @@ def handle_responses(sender, message):
 
     if 'luna' in message.lower(): # should I make this a regex? help
         response = help_body
-    elif len(hangs) < 1: # if they respond to a hang that doesn't exist
+    elif hangs is not None: # if they respond to a hang that doesn't exist
         response = fail_body
     else: # if they respond to a hang that exists
         if message == 'Y':
