@@ -100,7 +100,7 @@ def handle_responses(sender, message):
     # should I move getting the user and hang to the top? Then better understand what is possible here before moving into the if statements
     user = User.query.filter_by(phone_number=sender).first()
     attempt_week = get_scope()['attempt_week']
-    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempted','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER
+    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempted','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER, will fail if they have more than 1 hang in the same week
     and_confirm = 0
 
     if 'luna' in message.lower(): # should I make this a regex? help
@@ -128,13 +128,15 @@ def handle_responses(sender, message):
 
     send(response, sender)
 
-    # only works for admin (just me) case and no separate confirm logic
+    # only works for no separate confirm logic and not multiple hangs per responding user
     if not response == fail_body:
         if and_confirm:
-            message = confirm_body_base.format('Paul', day + " " + time)
+            u1 = User.query.filter_by(id=hangs.user_id_1).first() # the initiating user from hang app
+
+            message = confirm_body_base.format(u1.first_name, day + " " + time)
             send(message, sender)
             message = confirm_body_base.format(user.first_name, day + " " + time)
-            send(message, admin_number)
+            send(message, u1.phone_number)
 
 # PREP DATASET
 def get_current_attempts():
