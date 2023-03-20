@@ -146,6 +146,9 @@ def get_friends_hangs():
 
 # take every friend and make a new prospect for it 
 # need to consider each week in future
+
+# Note to self: max hangs can be ignored right now because create doesn't look at it, and schedule only looks at the confirmed and accepted hangs
+
 def create_sms_hangs():
     counter = 0
     friends_hangs = get_friends_hangs()
