@@ -1,5 +1,6 @@
 import pandas as pd
 import datetime as dt
+import numpy as np
 import json
 import collections
 import calendar
@@ -112,7 +113,6 @@ def melt_schedule(sched):
 
 # WHO WILL HANG OUT - now lets do some pre-processing on the hangs to check how we're going to handle them
 def get_friends_hangs():
-    # ADD CALCULATE PRIORITY
     friends = pd.read_sql(Friend.query.statement, conn)
     hangs = pd.read_sql(Hang.query.statement, conn)
     confirmed_hangs = hangs[hangs.state == 'confirmed']
@@ -138,6 +138,7 @@ def get_friends_hangs():
         friends_hangs = friends
         friends_hangs['state'] = None
 
+    friends_hangs = friends_hangs.replace({np.nan:None})
     return friends_hangs
 
 # cleanup friends to the ones you want to try and schedule
@@ -152,15 +153,16 @@ def get_friends_hangs():
 def create_sms_hangs():
     counter = 0
     friends_hangs = get_friends_hangs()
+    print(len(friends_hangs))
 
+    # could be nice to have it skip friends that were added within the current week (ie try the week after they're added)
     for index, row in friends_hangs.iterrows():
         if not row.state:
-            if row.attempt or not row.time_since_hang == row.time_since_hang:
+            if row.attempt or not row.time_since_hang:
                 used_schedule = get_schedule(row.creator_user_id)
-
                 # does nothing if you have no schedule for the week
                 if not used_schedule.empty:
-                    # prioritizes friends you have not scheduled with yet over those you have (new friends it attempts next week)
+                    # prioritizes friends you have not scheduled with yet over those you have
                     if not row.attempt:
                         priority = 1 # value for friends that you have not yet hung with
                     else:
