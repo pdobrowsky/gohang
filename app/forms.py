@@ -80,7 +80,9 @@ class EditProfileForm(FlaskForm):
                 raise ValidationError('This number is already taken.')
             
 class EditFriendForm(FlaskForm):
-    pass
+    name = StringField('Name', validators=[DataRequired(), Length(min=2, max=30)])
+    cadence = SelectField('Try to hang ever X weeks:', choices=[1,2,3,4,5,6,7,8], coerce=int, validators=[DataRequired()])
+    submit = SubmitField('Edit Friend')
 
 class ResetPasswordRequestForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired()])

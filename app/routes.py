@@ -2,7 +2,7 @@ from flask import render_template, flash, redirect, request, url_for
 from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
 from app import app, db, messager, scheduler
-from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm
+from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm, EditFriendForm
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
 from datetime import datetime
@@ -93,6 +93,37 @@ def unfriend(id):
     flash('You unfriended {}'.format(name))
 
     return redirect(url_for('friends'))
+
+@app.route('/edit_friend/<id>', methods=['GET','POST'])
+@login_required
+def edit_friend(id):
+    user = User.query.filter_by(id=id).first()
+
+    if user is None:
+        flash('User {} not found.'.format(id))
+        return redirect(url_for('friends'))
+    if user == current_user:
+        flash('You can\'t change your friendship with yourself!')
+        return redirect(url_for('friends'))
+    if not current_user.is_friend(user):
+        flash('You are not friends with {}'.format(id))
+        return redirect(url_for('friends'))
+
+    form = EditFriendForm()
+    friend = Friend.query.filter_by(creator_user_id=current_user.id, friend_user_id=id).first()
+
+    if form.validate_on_submit():
+        friend.cadence = form.cadence.data
+        friend.provided_name = form.name.data
+        friend.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Updated friendship with {}'.format(friend.provided_name))
+        return redirect(url_for('friends'))
+    elif request.method == 'GET':
+        form.name.data = friend.provided_name
+        form.cadence.data = friend.cadence
+
+    return render_template('edit_friend.html', title='Edit Friend', form=form)
 
 @app.route('/schedule', methods=['GET','POST'])
 @login_required
@@ -187,6 +218,7 @@ def profile():
         current_user.last_name = form.last_name.data
         current_user.fast_or_max = form.fast_or_max.data
         current_user.max_hang_per_week = form.max_hang_per_week.data
+        current_user.updated_at = datetime.utcnow()
         db.session.commit()
 
         flash('Your changes have been saved.')
