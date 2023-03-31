@@ -18,6 +18,7 @@ class User(UserMixin, db.Model):
     email = db.Column(db.String(120), index=True, unique=True)
     user_type = db.Column(db.String(255), index=True, default='sms')
     max_hang_per_week = db.Column(db.Integer, default=3)
+    fast_or_max = db.Column(db.String(255), default='fast')
     password_hash = db.Column(db.String(128))
     last_seen = db.Column(db.DateTime, default=datetime.utcnow)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

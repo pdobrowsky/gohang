@@ -177,28 +177,29 @@ def user(username):
     form= EmptyForm()
     return render_template('user.html', user=user, form=form)
 
-@app.route('/edit_profile', methods=['GET', 'POST'])
+@app.route('/profile', methods=['GET', 'POST'])
 @login_required
-def edit_profile():
-    form = EditProfileForm(current_user.username, current_user.email, current_user.phone_number)
+def profile():
+    form = EditProfileForm(current_user.email, current_user.phone_number)
 
     if form.validate_on_submit():
-        current_user.username = form.username.data
         current_user.first_name = form.first_name.data
         current_user.last_name = form.last_name.data
-        current_user.email = form.email.data
-        current_user.phone_number = form.phone_number.data
+        current_user.fast_or_max = form.fast_or_max.data
+        current_user.max_hang_per_week = form.max_hang_per_week.data
         db.session.commit()
 
         flash('Your changes have been saved.')
 
-        return redirect(url_for('edit_profile'))
+        return redirect(url_for('profile'))
     elif request.method == 'GET':
-        form.username.data = current_user.username
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
         form.email.data = current_user.email
         form.phone_number = current_user.phone_number
+        form.max_hang_per_week.data = current_user.max_hang_per_week
+        form.fast_or_max.data = current_user.fast_or_max
+
 
     return render_template('edit_profile.html', title='Edit Profile', form=form)
 

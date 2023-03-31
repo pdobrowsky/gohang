@@ -198,11 +198,14 @@ def schedule_sms_hangs():
         if user_hangs.empty:
             continue
 
+        # use fast or max to decide how to react?
+        # fast includes attempted hangs, max does not (and so can sometimes go over)
         max_hangs = users.max_hang_per_week[users.id == user_id].values[0]
         planned_hangs = len(user_hangs[user_hangs.state.isin(['confirmed', 'accepted'])])
 
         # capped out
         if planned_hangs >= max_hangs:
+            print('user {} is at max hangs for the week'.format(user_id))
             continue
 
         # get the schedules already booked

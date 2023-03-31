@@ -20,6 +20,7 @@ accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
 decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y, otherwise you can just ignore this and I'll try again next week!\n-Luna"""
 confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Luna"""
 remind_body_base = """Hi! \U0001F44B Just a reminder that you and {} are hanging out on {}. Check in with them if you haven't already to finalize your plans. Have fun! \U0000E415 \n-Luna"""
+auto_decline_base = """Hi! \U0001F44B I haven't heard back from you about your hangout with {}. I'm going to go ahead and assume none of these times work, if you're still interested in hanging out this week, just respond to this message with Y and I'll try to find a time that works for both of you!\n-Luna"""
 
 help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
@@ -137,6 +138,12 @@ def handle_responses(sender, message):
             send(message, sender)
             message = confirm_body_base.format(user.first_name, day + " " + time)
             send(message, u1.phone_number)
+
+def auto_decline():
+    # function to auto decline hangs that have not been responded to
+    # if attempted more than a day ago, let the user know that it will expire after today
+    # if attempted more than 2 days ago, auto decline
+    pass
 
 # PREP DATASET
 def get_current_attempts():

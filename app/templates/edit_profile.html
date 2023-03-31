@@ -2,10 +2,22 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h1>Edit Profile</h1>
-    <div class="row">
-        <div class="col-md-4">
-            {{ wtf.quick_form(form) }}
-        </div>
-    </div>
+    <h1>Profile</h1>
+    <P><b>Note: Phone Number is ignored but must be entered!</b></P>
+    <table class="table">
+        <tr>
+            <td width="256px">
+                <h2>{{ current_user.first_name }}</h2>                
+                {% if current_user.last_seen %}<p>Last seen on: {{ moment(current_user.last_seen).format('LLL') }}</p>{% endif %}
+                <img src="{{ current_user.avatar(256) }}">
+            </td>
+            <td>
+                <div class="row">
+                    <div class="col-md-4">
+                        {{ wtf.quick_form(form) }}
+                    </div>
+                </div>
+            </td>
+        </tr>
+    </table>
 {% endblock %}

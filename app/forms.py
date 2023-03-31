@@ -54,22 +54,16 @@ class SignUpForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=30)])
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
-    phone_number = StringField('Phone Number', validators=[DataRequired(),])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
+    phone_number = StringField('Phone Number', validators=[DataRequired(),], render_kw={'readonly': True})
+    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)], render_kw={'readonly': True})
+    max_hang_per_week = SelectField('Max Hangs Per Week', choices=[1,2,3,4], coerce=int, validators=[DataRequired()])
+    fast_or_max = SelectField('Fast or Max', choices=[('fast', 'Fast'), ('max', 'Max')], validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def __init__(self, original_username, original_email, original_phone_number, *args, **kwargs):
+    def __init__(self, original_email, original_phone_number, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
-        self.original_username = original_username
         self.original_email = original_email
         self.original_phone_number = original_phone_number
-
-    def validate_username(self, username):
-        if username.data != self.original_username:
-            user = User.query.filter_by(username=self.username.data).first()
-            if user is not None:
-                raise ValidationError('This username is already taken.')
             
     def validate_email(self, email):
         if email.data != self.original_email:
@@ -84,6 +78,9 @@ class EditProfileForm(FlaskForm):
             user = User.query.filter_by(username=self.phone_number.data).first()
             if user is not None:
                 raise ValidationError('This number is already taken.')
+            
+class EditFriendForm(FlaskForm):
+    pass
 
 class ResetPasswordRequestForm(FlaskForm):
     phone_number = StringField('Phone Number', validators=[DataRequired()])
