@@ -12,7 +12,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import collections
 
 # coloring hangs 
-colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "declined":"warning", "canceled":"danger"}
+colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "declined":"warning", "auto_declined":"warning", "canceled":"danger"}
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()

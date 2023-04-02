@@ -222,7 +222,7 @@ def schedule_sms_hangs():
 
         # cadence should break priority ties in the future
         # retry declined hangs that want retry first, before new prospects, limits the number of people that are tried in one week
-        user_hangs_retry = user_hangs[(user_hangs.state == 'declined') & (user_hangs.retry == True)]
+        user_hangs_retry = user_hangs[(user_hangs.state.isin(['declined', 'auto_declined'])) & (user_hangs.retry == True)]
         user_hangs_retry = user_hangs_retry.sort_values(by=['priority'], ascending=[False], ignore_index=True)
 
         print('retrying {} declined hangs'.format(len(user_hangs_retry)))

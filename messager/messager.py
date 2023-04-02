@@ -16,12 +16,12 @@ gohang_number = app.config['TWILIO_NUMBER']
 admin_number = app.config['ADMIN_NUMBER']
 
 attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering whether you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
-accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
-decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y, otherwise you can just ignore this and I'll try again next week!\n-Luna"""
 confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Luna"""
 remind_body_base = """Hi! \U0001F44B Just a reminder that you and {} are hanging out on {}. Check in with them if you haven't already to finalize your plans. Have fun! \U0000E415 \n-Luna"""
-auto_decline_base = """Hi! \U0001F44B I haven't heard back from you about your hangout with {}. I'm going to go ahead and assume none of these times work, if you're still interested in hanging out this week, just respond to this message with Y and I'll try to find a time that works for both of you!\n-Luna"""
 
+accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
+decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y, otherwise you can just ignore this and I'll try again next week!\n-Luna"""
+auto_decline_body = """Hi! \U0001F44B I haven't heard back from you, I'm going to assume you're busy or none of these times work, if you're still interested in hanging out this week, just respond to this message with Y and I'll try to find another time that works for both of you!\n-Luna"""
 help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
 retry_body = """Ok great! I'll send some more availability when I know more!\n-Luna"""
@@ -58,8 +58,12 @@ def accept(hangs, message):
 
     return accept_body_base, day, time
 
-def decline(hangs):
-    hangs.state = 'declined'
+def decline(hangs, type='manual'):
+    if type == 'auto':
+        hangs.state = 'auto_declined'
+    else:
+        hangs.state = 'declined'
+
     hangs.retry = False
     hangs.updated_at = dt.datetime.utcnow()
     db.session.commit()
@@ -101,7 +105,7 @@ def handle_responses(sender, message):
     # should I move getting the user and hang to the top? Then better understand what is possible here before moving into the if statements
     user = User.query.filter_by(phone_number=sender).first()
     attempt_week = get_scope()['attempt_week']
-    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempted','declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER, will fail if they have more than 1 hang in the same week
+    hangs = Hang.query.filter_by(user_id_2=user.id, week_of=attempt_week).filter(Hang.state.in_(['attempted','declined','auto_declined'])).first() # NEEDS TO BE UPDATED TO SUPPORT MORE THAN 1 USER, will fail if they have more than 1 hang in the same week
     and_confirm = 0
 
     if 'luna' in message.lower(): # should I make this a regex? help
@@ -111,7 +115,7 @@ def handle_responses(sender, message):
     else: # if they respond to a hang that exists
         if message == 'Y':
             # if they say yes check if they actually declined before, if so, set retry to true
-            if hangs.state == 'declined':
+            if hangs.state in ['declined','auto_declined']:
                 response = retry(hangs)
             else:
                 response = fail_body
@@ -141,9 +145,20 @@ def handle_responses(sender, message):
 
 def auto_decline():
     # function to auto decline hangs that have not been responded to
-    # if attempted more than a day ago, let the user know that it will expire after today
-    # if attempted more than 2 days ago, auto decline
-    pass
+    # if attempted more than a day ago, auto decline and let the user know
+    # will this work for multiple users? depends on how user_id_2 is set
+    hangs = Hang.query.filter_by(state='attempted').all()
+
+    for hang in hangs:
+        if (dt.datetime.utcnow() - hang.updated_at).seconds > 90000: # 25 hours in seconds...kind of odd but I prefer if it doesn't randomly decline in the morning based on when the job runs
+            print("auto declining hang {} for user {}".format(hang.id, hang.user_id_2))
+            u2 = User.query.filter_by(id=hang.user_id_2).first()
+
+            message = auto_decline_body
+            send(message, u2.phone_number)
+
+            decline(hang, type='auto')
+
 
 # PREP DATASET
 def get_current_attempts():
