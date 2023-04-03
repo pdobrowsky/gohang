@@ -147,11 +147,12 @@ def auto_decline():
     # function to auto decline hangs that have not been responded to
     # if attempted more than a day ago, auto decline and let the user know
     # will this work for multiple users? depends on how user_id_2 is set
-    hangs = Hang.query.filter_by(state='attempted').all()
+    hangs = Hang.query.filter_by(state='attempted', week_of=get_scope()['attempt_week']).all()
     print('checking {} hangs for auto decline'.format(len(hangs)))
 
     for hang in hangs:
         time_since_attempt = (dt.datetime.utcnow() - hang.updated_at).seconds
+        print('hang {} was attemted at {}'.format(hang.id, hang.updated_at))
         print('hang {} was attempted {} seconds ago'.format(hang.id, time_since_attempt))
         if (dt.datetime.utcnow() - hang.updated_at).seconds > 90000: # 25 hours in seconds...kind of odd but I prefer if it doesn't randomly decline in the morning based on when the job runs
             print("auto declining hang {} for user {}".format(hang.id, hang.user_id_2))

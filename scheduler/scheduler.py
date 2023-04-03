@@ -235,8 +235,8 @@ def schedule_sms_hangs():
             melted_sched = melted_sched[melted_sched.value == True]
 
             if melted_sched.empty:
-                print('out of slots')
-                break
+                print('out of slots for this user')
+                continue
             elif len(melted_sched) < sms_slots:
                 if fast_or_max == 'max':
                     print('stopping to enforce max')
