@@ -152,9 +152,8 @@ def auto_decline():
 
     for hang in hangs:
         time_since_attempt = (dt.datetime.utcnow() - hang.updated_at).seconds
-        print('hang {} was attemted at {}'.format(hang.id, hang.updated_at))
         print('hang {} was attempted {} seconds ago'.format(hang.id, time_since_attempt))
-        if (dt.datetime.utcnow() - hang.updated_at).seconds > 90000: # 25 hours in seconds...kind of odd but I prefer if it doesn't randomly decline in the morning based on when the job runs
+        if (dt.datetime.utcnow() - hang.updated_at).total_seconds > 90000: # 25 hours in seconds...kind of odd but I prefer if it doesn't randomly decline in the morning based on when the job runs
             print("auto declining hang {} for user {}".format(hang.id, hang.user_id_2))
             u2 = User.query.filter_by(id=hang.user_id_2).first()
 
