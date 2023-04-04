@@ -49,6 +49,7 @@ def before_request():
 def index():
     form = FriendForm()
 
+    # note, this does not use the provided name, but the name they enter if they join the app, which doesn't match what's shown in the friends list
     hangs = current_user.upcoming_hangs(scheduler.get_scope()['attempt_week'])
 
     if form.validate_on_submit():
