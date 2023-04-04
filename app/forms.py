@@ -16,7 +16,7 @@ def check_phone_number(phone_number):
         raise ValidationError('Invalid phone number.')
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired()])
+    email = StringField('Email', validators=[DataRequired()])
     password = PasswordField('Password', validators=[DataRequired()])
     remember_me = BooleanField('Remember Me')
     submit = SubmitField('Log In')
@@ -24,18 +24,11 @@ class LoginForm(FlaskForm):
 class SignUpForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=30)])
-    username = StringField('Username', validators=[DataRequired(), Length(min=3, max=64)])
     phone_number = StringField('Phone Number', validators=[DataRequired()])
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Sign Up')
-
-    def validate_username(self, username):
-        user = User.query.filter_by(username=username.data).first()
-
-        if user is not None:
-            raise ValidationError('This username is already taken.')
 
     def validate_email(self, email):
         email = User.query.filter_by(email=email.data).first()
@@ -67,7 +60,7 @@ class EditProfileForm(FlaskForm):
             
     def validate_email(self, email):
         if email.data != self.original_email:
-            user = User.query.filter_by(username=self.email.data).first()
+            user = User.query.filter_by(email=self.email.data).first()
             if user is not None:
                 raise ValidationError('This email is already taken.')
         
@@ -75,7 +68,7 @@ class EditProfileForm(FlaskForm):
         check_phone_number(phone_number)
         
         if phone_number.data != self.phone_number:
-            user = User.query.filter_by(username=self.phone_number.data).first()
+            user = User.query.filter_by(phone_number=self.phone_number.data).first()
             if user is not None:
                 raise ValidationError('This number is already taken.')
             

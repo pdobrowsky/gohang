@@ -11,7 +11,6 @@ from time import time
 
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(64), index=True, unique=True)
     first_name = db.Column(db.String(255))
     last_name = db.Column(db.String(255))
     phone_number = db.Column(db.String(255), index=True, unique=True)
@@ -30,7 +29,7 @@ class User(UserMixin, db.Model):
         return User.query.get(int(id))
 
     def __repr__(self):
-        return '<User {}>'.format(self.username)
+        return '<User {}>'.format(self.email)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)

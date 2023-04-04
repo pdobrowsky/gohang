@@ -156,10 +156,10 @@ def login():
     form = LoginForm()
 
     if form.validate_on_submit():
-        user = User.query.filter_by(username=form.username.data).first()
+        user = User.query.filter_by(email=form.email.data).first()
 
         if user is None or not user.check_password(form.password.data):
-            flash('Invalid username or password')
+            flash('Invalid email or password')
             return redirect(url_for('login'))
 
         login_user(user, remember=form.remember_me.data)
@@ -186,7 +186,7 @@ def signup():
 
     if form.validate_on_submit():
         if app.config['ALLOW_SIGNUP']:
-            user = User(username=form.username.data, email=form.email.data, first_name=form.first_name.data, 
+            user = User(email=form.email.data, first_name=form.first_name.data, 
                         last_name=form.last_name.data, phone_number=form.phone_number.data, user_type='hang')
             user.set_password(form.password.data)
             db.session.add(user)
@@ -199,14 +199,6 @@ def signup():
             return redirect(url_for('signup'))
 
     return render_template('signup.html', title='Sign Up', form=form)
-
-@app.route('/user/<username>')
-@login_required
-def user(username):
-    user = User.query.filter_by(username=username).first_or_404()
-
-    form= EmptyForm()
-    return render_template('user.html', user=user, form=form)
 
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
