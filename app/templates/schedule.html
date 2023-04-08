@@ -3,37 +3,67 @@
 
 {% block app_content %}
     <h3>Schedule</h3>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p><b>Week of:</b>
-        {{ form.week(class='datepicker', type='week') }}
-        {% for error in form.week.errors %}
-        <span style="color: red;">[{{ error }}]</span>
-        {% endfor %}
-        <p><b>FYI: Weeks run Monday to Sunday</b>
-        <p><b>FYI: If you submit a week twice it overwrites the previous input, sorry! &#128517;</b>
-        <p><b>FYI: Newly submitted schedules don't impact hangs that are already being/are scheduled</b>
-        <p><b>FYI: If you submit a schedule after scheduler runs but before messager runs, the older schedule will be used</b>
-        <table class="table table-hover">
-            <thead>
-                <tr>
-                    <th>Time</th>
-                    {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
-                    <th>{{ day }}</th>
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for time in ["Morning", "Afternoon", "Evening"] %}
-                <tr>
-                    <td>{{ time }}</td>
-                    {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
-                    <td>{{ form |attr(time + day)() }}</td>
-                    {% endfor %}
-                </tr>
+    <div class="row">
+        <div class="col-md-4">
+            <table class="table table-bordered">
+                <thead>
+                    <tr class="active">
+                        <th>Current Week</th>
+                        <th>Next Week</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        {% if not current_schedule.empty %}
+                        <td class="success">&#9989; <a href="">Edit</a></td> <!-- check whether there's a schedule, if so green check and edit, if not wave and create-->
+                        {% else %}
+                        <td class="warning">&#9888;&#65039; <a href="">Create</a></td>
+                        {% endif %}
+
+                        {% if not next_schedule.empty %}
+                        <td class="success">&#9989; <a href="">Edit</a></td> <!-- check whether there's a schedule, if so green check and edit, if not wave and create-->
+                        {% else %}
+                        <td class="warning">&#9888;&#65039; <a href="">Create</a></td>
+                        {% endif %}
+                    </tr>
+            </table>
+        </div>
+        <div class="col-md-8">
+            <p><b>FYI: Weeks run Monday to Sunday</b>
+            <p><b>FYI: If you submit a week twice it overwrites the previous input, sorry! &#128517;</b>
+            <p><b>FYI: Atm overwritten or edited schedules don't impact hangs that are already being/are scheduled</b>
+            <p><b>FYI: If you submit a schedule after scheduler runs but before messager runs, the older schedule will be used</b>
+        </div> 
+    </div>
+    <div class="row col-md-12">
+        <form action="" method="post">
+            {{ form.hidden_tag() }}
+            <p><b>Week of:</b>
+                {{ form.week(class='datepicker', type='week') }}
+                {% for error in form.week.errors %}
+                <span style="color: red;">[{{ error }}]</span>
                 {% endfor %}
-            </tbody>
-        </table>
-        {{ form.submit(class="btn btn-primary") }}
-    </form>
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                            <th>{{ day }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for time in ["Morning", "Afternoon", "Evening"] %}
+                        <tr>
+                            <td>{{ time }}</td>
+                            {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+                            <td>{{ form |attr(time + day)() }}</td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {{ form.submit(class="btn btn-primary") }}
+        </form>
+    </div>
 {% endblock %}

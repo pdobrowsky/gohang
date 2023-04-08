@@ -67,23 +67,9 @@ empty_schedule = pd.DataFrame.from_dict(empty_schedule)
 
 # HELPER FUNCTIONS
 # moving more things to functions because I'm concerned about the modules being used outside of the cronjob where things are newly imported
-def get_schedule(user_id):
-    live_schedules = get_live_schedules()
-    return live_schedules[live_schedules.user_id == user_id]
-
-def get_live_schedules():
-    schedules = pd.read_sql(Schedule.query.statement, conn)
-    schedules['week_of'] = schedules['week_of_int']
-    schedules = schedules[schedules['week_of'] == attempt_week] # will accept/expect multiple weeks in future?
-    live_schedules_time = schedules.pivot_table(index=['user_id', 'week_of'], values=['created_at'], aggfunc=max) # needs to update for mutual hangs
-    live_schedules_time.reset_index(inplace=True)
-
-    if live_schedules_time.empty: # this line is kind of crap to avoid merge which will raise an error when there are no schedules
-        return live_schedules_time
-
-    live_schedules = schedules.merge(live_schedules_time, left_on=['user_id','week_of','created_at'], right_on=['user_id','week_of','created_at'], how='inner')
-
-    return live_schedules
+def get_schedule(user_id, attempt_week=attempt_week):
+    schedule = pd.read_sql(Schedule.query.filter_by(week_of_int=attempt_week, user_id=user_id).order_by(Schedule.created_at.desc()).statement, conn) # will accept/expect multiple weeks in future?
+    return schedule
 
 def sched_from_string(sched):
     return pd.DataFrame.from_dict(json.loads(sched))
@@ -164,7 +150,7 @@ def create_sms_hangs():
                 if not used_schedule.empty:
                     # prioritizes friends you have not scheduled with yet over those you have
                     if not row.attempt:
-                        priority = 1 # value for friends that you have not yet hung with
+                        priority = .5 # value for friends that you have not yet hung with, reduced to .5 now to not continually be at the top
                     else:
                         priority = 1 - (row.cadence/(row.time_since_hang + 1)) # value for friends that you have
 

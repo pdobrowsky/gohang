@@ -130,6 +130,8 @@ def edit_friend(id):
 @login_required
 def schedule():
     form = ScheduleForm()
+    current_schedule = scheduler.get_schedule(current_user.id)
+    next_schedule = scheduler.get_schedule(current_user.id, scheduler.get_scope()['attempt_week']+1)
 
     if form.validate_on_submit():
         avails = collections.defaultdict(dict)
@@ -147,7 +149,7 @@ def schedule():
         flash("Your schedule for the week of {} was added! :D".format(form.week.data))
         redirect(url_for('schedule'))
 
-    return render_template('schedule.html', title='Schedule', form=form)
+    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
