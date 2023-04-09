@@ -150,7 +150,7 @@ def create_sms_hangs():
                 if not used_schedule.empty:
                     # prioritizes friends you have not scheduled with yet over those you have
                     if not row.attempt:
-                        priority = .5 # value for friends that you have not yet hung with, reduced to .5 now to not continually be at the top
+                        priority = .39 # value for friends that you have not yet hung with, reduced now to not continually be at the top
                     else:
                         priority = 1 - (row.cadence/(row.time_since_hang + 1)) # value for friends that you have
 
