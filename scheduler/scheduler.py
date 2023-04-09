@@ -171,7 +171,7 @@ def schedule_sms_hangs():
     users = pd.read_sql(User.query.filter_by(user_type='hang').statement, conn)
 
     for user_id in hangs.user_id_1.unique():
-        used_schedule = get_schedule(user_id)
+        used_schedule = get_schedule(int(user_id))
         attempt_slots = sms_slots
 
         # no schedule
