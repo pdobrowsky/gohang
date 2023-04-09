@@ -15,15 +15,15 @@
                 <tbody>
                     <tr>
                         {% if not current_schedule.empty %}
-                        <td class="success">&#9989; <a href="">Edit</a></td> <!-- check whether there's a schedule, if so green check and edit, if not wave and create-->
+                        <td class="success">&#9989; <a href="{{ url_for('edit_schedule', id=current_schedule.id[0]) }}">Edit</a></td>
                         {% else %}
-                        <td class="warning">&#128075; <a href="">Create</a></td>
+                        <td class="warning">&#128075; <a href="{{ url_for('create_schedule', week=current) }}">Create</a></td>
                         {% endif %}
 
                         {% if not next_schedule.empty %}
-                        <td class="success">&#9989; <a href="">Edit</a></td> <!-- check whether there's a schedule, if so green check and edit, if not wave and create-->
+                        <td class="success">&#9989; <a href="{{ url_for('edit_schedule', id=next_schedule.id)[0] }}">Edit</a></td>
                         {% else %}
-                        <td class="warning">&#128075; <a href="">Create</a></td>
+                        <td class="warning">&#128075; <a href="{{ url_for('create_schedule', week=next) }}">Create</a></td>
                         {% endif %}
                     </tr>
             </table>

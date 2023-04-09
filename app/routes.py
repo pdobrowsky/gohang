@@ -3,10 +3,11 @@ from flask_login import login_user, current_user, logout_user, login_required
 from werkzeug.urls import url_parse
 from app import app, db, messager, scheduler
 from app.forms import LoginForm, SignUpForm, EditProfileForm, ResetPasswordRequestForm, ResetPasswordForm, EmptyForm, FriendForm, ScheduleForm, ContactForm, EditFriendForm
+from wtforms import BooleanField
 from app.models import User, Friend, Schedule
 from app.emails import send_password_reset_email
 from datetime import datetime
-from json import dumps
+from json import dumps, loads
 from twilio.twiml.messaging_response import MessagingResponse
 
 import collections
@@ -130,8 +131,10 @@ def edit_friend(id):
 @login_required
 def schedule():
     form = ScheduleForm()
-    current_schedule = scheduler.get_schedule(current_user.id)
-    next_schedule = scheduler.get_schedule(current_user.id, scheduler.get_scope()['attempt_week']+1)
+    current = scheduler.get_scope()['attempt_week']
+    next = scheduler.get_scope()['attempt_week'] + 1
+    current_schedule = scheduler.get_schedule(current_user.id, current)
+    next_schedule = scheduler.get_schedule(current_user.id, next)
 
     if form.validate_on_submit():
         avails = collections.defaultdict(dict)
@@ -149,7 +152,78 @@ def schedule():
         flash("Your schedule for the week of {} was added! :D".format(form.week.data))
         redirect(url_for('schedule'))
 
-    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule)
+    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule, current=current, next=next)
+
+@app.route('/edit_schedule/<id>', methods=['GET','POST'])
+@login_required
+def edit_schedule(id):
+    schedule = Schedule.query.filter_by(id=id).first()
+    current = scheduler.get_scope()['attempt_week']
+    next = scheduler.get_scope()['attempt_week'] + 1
+    current_schedule = scheduler.get_schedule(current_user.id, current)
+    next_schedule = scheduler.get_schedule(current_user.id, next)
+
+    if schedule is None:
+        flash('Schedule {} not found.'.format(id))
+        return redirect(url_for('schedule'))
+    if schedule.user_id != current_user.id:
+        flash('You can\'t edit someone else\'s schedule!')
+        return redirect(url_for('schedule'))
+
+    form = ScheduleForm()
+    avails = loads(schedule.avails)
+
+    if form.validate_on_submit():
+        avails = collections.defaultdict(dict)
+
+        for time in ['Morning', 'Afternoon', 'Evening']:
+            for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+                avails[time][day] = getattr(form, time+day).data
+
+        avails = dumps(avails)
+
+        schedule.avails = avails
+        schedule.week_of_int = int(form.week.data[-2:])
+        schedule.updated_at = datetime.utcnow()
+        db.session.commit()
+        flash('Updated schedule for the week of {}'.format(form.week.data))
+        return redirect(url_for('schedule'))
+    elif request.method == 'GET':
+        form.week.data = '2023-W' + str(schedule.week_of_int).zfill(2) # need to correct for year change...evntually
+        for time in ['Morning', 'Afternoon', 'Evening']:
+            for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+                setattr(getattr(form, time+day), 'data', avails[time][day])
+
+    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule, current=current, next=next)
+
+@app.route('/create_schedule/<week>', methods=['GET','POST'])
+@login_required
+def create_schedule(week):
+    form = ScheduleForm()
+    current = scheduler.get_scope()['attempt_week']
+    next = scheduler.get_scope()['attempt_week'] + 1
+    current_schedule = scheduler.get_schedule(current_user.id, current)
+    next_schedule = scheduler.get_schedule(current_user.id, next)
+
+    if form.validate_on_submit():
+        avails = collections.defaultdict(dict)
+
+        for time in ['Morning', 'Afternoon', 'Evening']:
+            for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']:
+                avails[time][day] = getattr(form, time+day).data
+
+        avails = dumps(avails)
+
+        schedule = Schedule(user_id = current_user.id, week_of_int = int(form.week.data[-2:]), avails=avails)
+        db.session.add(schedule)
+        db.session.commit()
+
+        flash("Your schedule for the week of {} was added! :D".format(form.week.data))
+        redirect(url_for('schedule'))
+    elif request.method == 'GET':
+        form.week.data = '2023-W' + str(week).zfill(2) # need to correct for year change...evntually
+
+    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule, current=current, next=next)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
