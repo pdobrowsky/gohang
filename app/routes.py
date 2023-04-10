@@ -262,7 +262,24 @@ def signup():
     form = SignUpForm()
 
     if form.validate_on_submit():
-        if app.config['ALLOW_SIGNUP']:
+        if not app.config['ALLOW_SIGNUP']:
+            flash('Sorry, you can\'t sign up at this time :( Reach out to us on the contact page to get added to the waitlist!')
+            return redirect(url_for('signup'))
+
+        user = User.query.filter_by(phone_number=form.phone_number.data).first()
+
+        # in the future these both need to trigger verification first
+        if user is not None:
+            user.user_type = 'hang'
+            user.first_name = form.first_name.data
+            user.last_name = form.last_name.data
+            user.set_password(form.password.data)
+            user.email = form.email.data
+            db.session.commit()
+
+            flash('Your account was claimed! Log in to start spending more time with friends')
+            return redirect(url_for('login'))
+        else:
             user = User(email=form.email.data, first_name=form.first_name.data, 
                         last_name=form.last_name.data, phone_number=form.phone_number.data, user_type='hang')
             user.set_password(form.password.data)
@@ -271,9 +288,6 @@ def signup():
 
             flash('Your account was created! Log in to start spending more time with friends')
             return redirect(url_for('login'))
-        else:
-            flash('Sorry, you can\'t sign up at this time :( Reach out to us on the contact page to get added to the waitlist!')
-            return redirect(url_for('signup'))
 
     return render_template('signup.html', title='Sign Up', form=form)
 

@@ -3,6 +3,7 @@ from wtforms import StringField, PasswordField, BooleanField, SubmitField, Selec
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError, Length
 from wtforms.fields import DateField
 from app.models import User
+from app import app
 from datetime import datetime
 
 import phonenumbers
@@ -28,10 +29,11 @@ class SignUpForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', validators=[DataRequired(), EqualTo('password')])
+    invite_code = StringField('Invite Code', validators=[Length(max=30)])
     submit = SubmitField('Sign Up')
 
     def validate_email(self, email):
-        email = User.query.filter_by(email=email.data).first()
+        email = User.query.filter_by(email=email.data, user_type='hang').first()
 
         if email is not None:
             raise ValidationError('This email is already associated with an account.')
@@ -39,10 +41,14 @@ class SignUpForm(FlaskForm):
     def validate_phone_number(self, phone_number):
         check_phone_number(phone_number)
 
-        user = User.query.filter_by(phone_number=phone_number.data).first()
+        user = User.query.filter_by(phone_number=phone_number.data, user_type='hang').first()
 
         if user is not None:
             raise ValidationError('This phone number is already taken.')
+        
+    def validate_invite_code(self, invite_code):
+        if invite_code.data != app.config['INVITE_CODE']:
+            raise ValidationError('Invalid invite code.')
 
 class EditProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
