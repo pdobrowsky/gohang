@@ -230,7 +230,7 @@ def create_hangs():
         print('adding prospect for user {} and friend {} with priority {}'.format(row.creator_user_id, row.friend_user_id, priority))
 
         hang_to_add = Hang(user_id_1= row.creator_user_id , user_id_2=row.friend_user_id, 
-                        state='prospect', week_of=attempt_week, priority=priority, connect_type=row.type)
+                        state='prospect', week_of=attempt_week, priority=priority, friend_type=row.type)
         
         db.session.add(hang_to_add)
         counter += 1
@@ -282,12 +282,12 @@ def schedule_hangs():
 
     # go through the mutuals hangs first, then the sms hangs
     # the original loop doesn't work as well because we can't guarantee position of ID
-    mutual_hangs = hangs[hangs.connect_type == 'mutual']
+    mutual_hangs = hangs[hangs.friend_type == 'mutual']
     mutual_hangs = mutual_hangs[mutual_hangs.state.isin(['prospect', 'declined'])] # we don't need to check retry for mutuals, we automatically retry them behind the scenes
     print('attempting to schedule {} mutual hangs'.format(len(mutual_hangs)))
     schedule_mutual_hangs(mutual_hangs)
 
-    sms_hangs = hangs[hangs.connect_type == 'sms']
+    sms_hangs = hangs[hangs.friend_type == 'sms']
     sms_hangs = sms_hangs[sms_hangs.state.isin(['prospect', 'declined', 'auto_declined'])]
     print('attempting to schedule {} sms hangs'.format(len(sms_hangs)))
 

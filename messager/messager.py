@@ -211,7 +211,7 @@ def attempt_new_prospects():
 
 def confirm_mutuals():
     # take all the mutual hangs that have been accepted and send a confirmation message to each user
-    hangs = Hang.query.filter_by(state='accepted', connect_type='mutual').all()
+    hangs = Hang.query.filter_by(state='accepted', friend_type='mutual').all()
 
     print('starting confirmations for {} mutual hangs'.format(len(hangs)))
     for hang in hangs:
