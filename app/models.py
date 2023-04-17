@@ -92,7 +92,6 @@ class Schedule(db.Model):
     updated_at = db.Column(db.DateTime, index=True)
     week_of_int = db.Column(db.Integer, index=True)
     avails = db.Column(db.Text)
-    processed_at = db.Column(db.DateTime, index=True)
 
     def __repr__(self):
         return '<Schedule user_id: {} created_at: {} avails: {} week of: {}>'.format(self.user_id, self.created_at, self.avails, self.week_of)
@@ -108,7 +107,7 @@ class Hang(db.Model):
     week_of = db.Column(db.Integer, index=True)
     state = db.Column(db.String(255), index=True)
     priority = db.Column(db.Float(), index=True)
-    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # remove? it's not used because we always just find the most recent
+    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # ghost field, not used but annyoing to remove because of fk constraint
     reminded = db.Column(db.Boolean, index=True, default=False)
     finalized_slot = db.Column(db.String(255))
     retry = db.Column(db.Boolean, index=True, default=False)
