@@ -209,6 +209,25 @@ def attempt_new_prospects():
         db.session.commit()
         print('sent attempt')
 
+def confirm_mutuals():
+    # take all the mutual hangs that have been accepted and send a confirmation message to each user
+    hangs = Hang.query.filter_by(state='accepted', connect_type='mutual').all()
+
+    print('starting confirmations for {} mutual hangs'.format(len(hangs)))
+    for hang in hangs:
+        u1 = User.query.filter_by(id=hang.user_id_1).first()
+        u2 = User.query.filter_by(id=hang.user_id_2).first()
+
+        message = confirm_body_base.format(u1.first_name, hang.finalized_slot)
+        send(message, u2.phone_number)
+        message = confirm_body_base.format(u2.first_name, hang.finalized_slot)
+        send(message, u1.phone_number)
+
+        hang.state = 'confirmed'
+        hang.updated_at = dt.datetime.utcnow()
+        db.session.commit()
+        print('sent confirmation for hang {}'.format(hang.id))
+
 # FUTURE METHODS
 def request_hangs():
     # future method to check what hangs are scheduled

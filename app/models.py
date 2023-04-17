@@ -6,6 +6,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 from time import time
+from sqlalchemy import or_
 
 # !!!!need to update week of logic to account for year changeover in future
 
@@ -54,8 +55,13 @@ class User(UserMixin, db.Model):
         self.friends.remove(user)
 
     def upcoming_hangs(self, week_of):
-        hangs = db.session.query(Hang, User).filter(Hang.user_id_1==self.id, Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2)).order_by(Hang.updated_at.desc())
+        # this needs to be updated to account for your own user ID appearing in both user_id_1 and user_id_2 depending on who "initiated" the hang
+        hangs = db.session.query(Hang, User).filter(or_(Hang.user_id_1==self.id, Hang.user_id_2==self.id), Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2)).order_by(Hang.updated_at.desc())
         return hangs
+    
+    def non_mutual_friends(self):
+        # checks what users have friended you that you haven't friended to make them easy to add as mutuals
+        pass
 
     @staticmethod
     def verify_reset_password_token(token):
@@ -67,23 +73,14 @@ class User(UserMixin, db.Model):
         return User.query.get(id)
     
 class Friend(db.Model):
-    # add relation type, sms or hang
-    # add "live" - basically to protect against 1 way hang:hang friends?
     id = db.Column(db.Integer, primary_key=True)
     creator_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     friend_user_id = db.Column(db.Integer, db.ForeignKey('user.id'), index=True)
     cadence = db.Column(db.Integer)
-    # friend_cadence eventually
     provided_name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
     updated_at = db.Column(db.DateTime, index=True)
     user = db.relationship('User', primaryjoin='user.c.id == friend.c.friend_user_id')
-
-    def update_type():
-        pass
-
-    def is_live():
-        pass
 
     def __repr__(self):
         return '<Friend creator_id: {} friend_id: {} cadence: {}weeks>'.format(self.creator_user_id, self.friend_user_id, self.cadence)
@@ -116,6 +113,7 @@ class Hang(db.Model):
     finalized_slot = db.Column(db.String(255))
     retry = db.Column(db.Boolean, index=True, default=False)
     reminded = db.Column(db.Boolean, index=True, default=False)
+    connect_type = db.Column(db.String(255), index=True)
 
     def __repr__(self):
         return '<Hang>'
