@@ -113,8 +113,6 @@ class Hang(db.Model):
     finalized_slot = db.Column(db.String(255))
     retry = db.Column(db.Boolean, index=True, default=False)
     reminded = db.Column(db.Boolean, index=True, default=False)
-    connect_type = db.Column(db.String(255), index=True)
-    test_field = db.Column(db.String(255))
 
     def __repr__(self):
         return '<Hang>'
