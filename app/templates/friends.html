@@ -26,5 +26,21 @@
             {% endfor %}
         </tbody>
     </table>
+    <h3>Hang Users to Friend</h3>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Phone Number</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in to_friend %}
+            <tr>
+                <td>{{ user.first_name }}</td>
+                <td>{{ user.phone_number }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
 {% endblock %}
 

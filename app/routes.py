@@ -65,11 +65,13 @@ def friends():
     form = FriendForm()
     friends = Friend.query.filter_by(creator_user_id=current_user.id)
 
+    to_friend = current_user.non_mutual_friends()
+
     if form.validate_on_submit():
         add_friend(form)
         return redirect(url_for('friends'))
 
-    return render_template('friends.html', title='Friends', form=form, friends=friends)
+    return render_template('friends.html', title='Friends', form=form, friends=friends, to_friend=to_friend)
 
 @app.route('/unfriend/<id>', methods=['GET'])
 @login_required

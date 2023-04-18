@@ -1,4 +1,5 @@
 import jwt
+import pandas as pd
 
 from datetime import datetime
 from app import db, login, app
@@ -60,8 +61,17 @@ class User(UserMixin, db.Model):
         return hangs
     
     def non_mutual_friends(self):
-        # checks what users have friended you that you haven't friended to make them easy to add as mutuals
-        pass
+        # checks what hang users have friended you that you haven't friended to make them easy to add as mutuals
+        # ignores whether the other user is still a hang user
+        friended_by = db.session.query(Friend).filter(Friend.friend_user_id==self.id).all()
+        not_friended = []
+
+        for friend in friended_by:
+            u = User.query.get(friend.creator_user_id)
+            if not self.is_friend(u):
+                not_friended.append(u)
+
+        return not_friended
 
     @staticmethod
     def verify_reset_password_token(token):
@@ -107,7 +117,7 @@ class Hang(db.Model):
     week_of = db.Column(db.Integer, index=True)
     state = db.Column(db.String(255), index=True)
     priority = db.Column(db.Float(), index=True)
-    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # ghost field, not used but annyoing to remove because of fk constraint
+    schedule_id = db.Column(db.Integer, db.ForeignKey('schedule.id')) # ghost field, not used but annyoing to remove because of fk constraint, not sure what name is
     reminded = db.Column(db.Boolean, index=True, default=False)
     finalized_slot = db.Column(db.String(255))
     retry = db.Column(db.Boolean, index=True, default=False)
