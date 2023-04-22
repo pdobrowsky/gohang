@@ -209,6 +209,7 @@ def create_hangs():
     for index, row in friends_hangs.iterrows():
         creator_schedule = get_schedule(row.creator_user_id)
 
+        # I don't think this is working because it created prospects for me this week when I had no schedule
         if row.type == 'mutual':
             friend_schedule = get_schedule(row.friend_user_id)
             schedules_set = ~creator_schedule.empty & ~friend_schedule.empty

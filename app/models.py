@@ -7,7 +7,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
 from hashlib import md5
 from time import time
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 
 # !!!!need to update week of logic to account for year changeover in future
 
@@ -57,7 +57,13 @@ class User(UserMixin, db.Model):
 
     def upcoming_hangs(self, week_of):
         # this needs to be updated to account for your own user ID appearing in both user_id_1 and user_id_2 depending on who "initiated" the hang
-        hangs = db.session.query(Hang, User).filter(or_(Hang.user_id_1==self.id, Hang.user_id_2==self.id), Hang.week_of==week_of).join(User, (User.id == Hang.user_id_2)).order_by(Hang.updated_at.desc())
+        hangs = db.session.query(Hang, User, Friend.provided_name)\
+            .filter(or_(Hang.user_id_1==self.id, Hang.user_id_2==self.id), Hang.week_of==week_of)\
+            .join(User, or_(User.id == Hang.user_id_1, User.id == Hang.user_id_2))\
+            .filter(User.id != self.id)\
+            .join(Friend, or_(and_(Friend.creator_user_id == self.id, Friend.friend_user_id == User.id), and_(Friend.creator_user_id == User.id, Friend.friend_user_id == self.id)))\
+            .order_by(Hang.updated_at.desc())
+
         return hangs
     
     def non_mutual_friends(self):
