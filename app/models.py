@@ -56,7 +56,6 @@ class User(UserMixin, db.Model):
         self.friends.remove(user)
 
     def upcoming_hangs(self, week_of):
-        # this needs to be updated to account for your own user ID appearing in both user_id_1 and user_id_2 depending on who "initiated" the hang
         hangs = db.session.query(Hang, User, Friend.provided_name)\
             .filter(or_(Hang.user_id_1==self.id, Hang.user_id_2==self.id), Hang.week_of==week_of)\
             .join(User, or_(User.id == Hang.user_id_1, User.id == Hang.user_id_2))\
