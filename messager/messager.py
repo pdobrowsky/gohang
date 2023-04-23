@@ -86,6 +86,8 @@ def remind():
     tomorrow = current_day + 1
     tomorrow_string = calendar.day_name[tomorrow]
 
+    print('starting reminder process for {} hangs'.format(len(hangs)))
+
     for hang in hangs:
         if tomorrow_string in hang.finalized_slot:
             u1 = User.query.filter_by(id=hang.user_id_1).first()
@@ -175,16 +177,28 @@ def get_current_attempts():
     attempt_hangs = attempt_hangs.rename(columns={'first_name':'friend_name'})
     attempt_hangs = attempt_hangs.merge(users[['id','first_name']], left_on='user_id_1', right_on='id', how='inner', suffixes=(None,'_y'))
     attempt_hangs = attempt_hangs.rename(columns={'first_name':'sender_name'})
-    attempt_hangs = attempt_hangs[['id','user_id_1','user_id_2','schedule','phone_number','friend_name','sender_name']]
+    attempt_hangs = attempt_hangs[['id','user_id_1','user_id_2','schedule','phone_number','friend_name','sender_name','priority']]
+    attempt_hangs = attempt_hangs.sort_values(by='priority', ascending=False)
 
     return attempt_hangs
 
 def attempt_new_prospects():
     print('starting attempts')
     attempt_hangs = get_current_attempts()
+    attempt_week = get_scope()['attempt_week']
 
     # update this to be by user_id_2 to collate all friends trying to hang with them that week
     for index, row in attempt_hangs.iterrows():
+        # Check if the SMS user already has a hang being scheduled, declined, or auto_declined for the given week
+        existing_attempt = Hang.query.filter_by(user_id_2=row.user_id_2,week_of=attempt_week
+                                                ).filter(
+                                                    Hang.state.in_(['attempted', 'declined', 'auto_declined'])
+                                                ).first()
+        
+        if existing_attempt:
+            print('skipping sms attempt for user {} because they currently have a hang in state {}'.format(row.user_id_2, existing_attempt.state))
+            continue
+
         # prep the message
         schedule = melt_schedule(sched_from_string(row.schedule))
         schedule = schedule[schedule.value == True].reset_index()
