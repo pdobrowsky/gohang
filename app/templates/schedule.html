@@ -2,7 +2,7 @@
 {% import 'bootstrap/wtf.html' as wtf %}
 
 {% block app_content %}
-    <h3>Schedule</h3>
+    <h3>Availability</h3>
     <div class="row">
         <div class="col-md-4">
             <table class="table table-bordered">
@@ -32,8 +32,8 @@
             <p><b>FYI Scheduling Quirks!</b>
             <p>Weeks run Monday to Sunday
             <p>If you submit a week twice it overwrites the previous input, sorry! &#128517;
-            <p>Atm overwritten or edited schedules don't impact hangs that are already being/are scheduled
-            <p>If you submit a schedule after scheduler runs but before messager runs, the older schedule will be used
+            <p>Atm overwritten or edited availability doesn't impact hangs that are already being/are scheduled
+            <p>If you submit availability after scheduler runs, the new information will not be used until the next scheduler run
         </div> 
     </div>
     <div class="row col-md-12">

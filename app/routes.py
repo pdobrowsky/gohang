@@ -154,7 +154,7 @@ def schedule():
         flash("Your schedule for the week of {} was added! :D".format(form.week.data))
         redirect(url_for('schedule'))
 
-    return render_template('schedule.html', title='Schedule', form=form, current_schedule=current_schedule, next_schedule=next_schedule, current=current, next=next)
+    return render_template('schedule.html', title='Availability', form=form, current_schedule=current_schedule, next_schedule=next_schedule, current=current, next=next)
 
 @app.route('/edit_schedule/<id>', methods=['GET','POST'])
 @login_required
