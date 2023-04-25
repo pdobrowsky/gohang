@@ -212,13 +212,13 @@ def create_hangs():
         # I don't think this is working because it created prospects for me this week when I had no schedule
         if row.type == 'mutual':
             friend_schedule = get_schedule(row.friend_user_id)
-            schedules_set = ~creator_schedule.empty & ~friend_schedule.empty
+            schedules_empty = creator_schedule.empty | friend_schedule.empty
         else:
-            schedules_set = ~creator_schedule.empty
+            schedules_empty = creator_schedule.empty
 
         # only creates prospects if there's schedules available
         # basically if you don't have a schedule, you can't be scheduled, and we shouldn't judge scheduling effectiveness based on that
-        if not schedules_set:
+        if schedules_empty:
             print('skipping hang for user {} and friend {} because they have no schedule'.format(row.creator_user_id, row.friend_user_id))
             continue
 
