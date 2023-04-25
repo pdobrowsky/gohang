@@ -173,7 +173,7 @@ def get_current_attempts():
 
     attempt_hangs = hangs[(hangs.state == 'prospect') & (hangs.schedule.notnull()) & (hangs.week_of == attempt_week)]
     attempt_hangs = attempt_hangs.merge(users[['id','phone_number','first_name']], left_on='user_id_2', right_on='id', how='inner', suffixes=(None,'_y'))
-    attempt_hangs = attempt_hangs[['id','user_id_1','user_id_2','schedule','phone_number','first_name']]
+    attempt_hangs = attempt_hangs[['id','user_id_1','user_id_2','schedule','phone_number','first_name','priority']]
     attempt_hangs = attempt_hangs.rename(columns={'first_name':'friend_name'})
     attempt_hangs = attempt_hangs.merge(users[['id','first_name']], left_on='user_id_1', right_on='id', how='inner', suffixes=(None,'_y'))
     attempt_hangs = attempt_hangs.rename(columns={'first_name':'sender_name'})
