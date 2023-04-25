@@ -277,13 +277,15 @@ def signup():
             user.last_name = form.last_name.data
             user.set_password(form.password.data)
             user.email = form.email.data
+            user.invite_code = form.invite_code.data
             db.session.commit()
 
             flash('Your account was claimed! Log in to start spending more time with friends')
             return redirect(url_for('login'))
         else:
             user = User(email=form.email.data, first_name=form.first_name.data, 
-                        last_name=form.last_name.data, phone_number=form.phone_number.data, user_type='hang')
+                        last_name=form.last_name.data, phone_number=form.phone_number.data, 
+                        user_type='hang', invite_code=form.invite_code.data)
             user.set_password(form.password.data)
             db.session.add(user)
             db.session.commit()
