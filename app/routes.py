@@ -221,7 +221,7 @@ def create_schedule(week):
         db.session.commit()
 
         flash("Your schedule for the week of {} was added! :D".format(form.week.data))
-        redirect(url_for('schedule'))
+        return redirect(url_for('schedule'))
     elif request.method == 'GET':
         form.week.data = '2023-W' + str(week).zfill(2) # need to correct for year change...evntually
 
