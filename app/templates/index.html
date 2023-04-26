@@ -15,7 +15,6 @@
                 <th>Name</th>
                 <th>State</th>
                 <th>Time Slot</th>
-                <th>Hang Type</th>
                 <th>User Type</th>
             </tr>
         </thead>
@@ -25,7 +24,6 @@
                 <td>{{ hang[2] }}</td>
                 <td>{{ hang[0].state }}</td>
                 <td>{{ hang[0].finalized_slot }}</td>
-                <td>{{ hang[0].friend_type }}</td>
                 <td>{{ hang[1].user_type }}</td>
             </tr>
             {% endfor %}
