@@ -262,6 +262,7 @@ def signup():
         return redirect(url_for('index'))
     
     form = SignUpForm()
+    message_template = "Hey Paul, someone named {} signed up for HangTime with the following info:\nPhone: {}\nEmail: {}\nInvite Code: {}\n\n-Luna"
 
     if form.validate_on_submit():
         if not app.config['ALLOW_SIGNUP']:
@@ -281,7 +282,6 @@ def signup():
             db.session.commit()
 
             flash('Your account was claimed! Log in to start spending more time with friends')
-            return redirect(url_for('login'))
         else:
             user = User(email=form.email.data, first_name=form.first_name.data, 
                         last_name=form.last_name.data, phone_number=form.phone_number.data, 
@@ -291,7 +291,10 @@ def signup():
             db.session.commit()
 
             flash('Your account was created! Log in to start spending more time with friends')
-            return redirect(url_for('login'))
+
+        message = message_template.format(form.first_name.data, form.phone_number.data, form.email.data, form.invite_code.data)
+        messager.send(message, app.config['ADMIN_NUMBER'])
+        return redirect(url_for('login'))
 
     return render_template('signup.html', title='Sign Up', form=form)
 
