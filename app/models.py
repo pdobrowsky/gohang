@@ -61,7 +61,7 @@ class User(UserMixin, db.Model):
             .filter(or_(Hang.user_id_1==self.id, Hang.user_id_2==self.id), Hang.week_of==week_of)\
             .join(User, or_(User.id == Hang.user_id_1, User.id == Hang.user_id_2))\
             .filter(User.id != self.id)\
-            .join(Friend, or_(and_(Friend.creator_user_id == self.id, Friend.friend_user_id == User.id), and_(Friend.creator_user_id == User.id, Friend.friend_user_id == self.id)))\
+            .join(Friend, and_(Friend.creator_user_id == self.id, Friend.friend_user_id == User.id))\
             .order_by(Hang.updated_at.desc())
 
         return hangs
