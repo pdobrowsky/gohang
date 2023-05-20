@@ -20,11 +20,12 @@ confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have 
 remind_body_base = """Hi! \U0001F44B Just a reminder that you and {} are hanging out on {}. Check in with them if you haven't already to finalize your plans. Have fun! \U0000E415 \n-Luna"""
 
 accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
-decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y, otherwise you can just ignore this and I'll try again next week!\n-Luna"""
+decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y!\n-Luna"""
 auto_decline_body = """Hi! \U0001F44B I haven't heard back from you, I'm going to assume you're busy or none of these times work, if you're still interested in hanging out this week, just respond to this message with Y and I'll try to find another time that works for both of you!\n-Luna"""
 help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
-retry_body = """Ok great! I'll send some more availability when I know more!\n-Luna"""
+retry_body = """Great! I'll send some more availability when I know more!\n-Luna"""
+no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -125,6 +126,8 @@ def handle_responses(sender, message):
             # is there something to decline?
             if hangs.state == 'attempted':
                 response = decline(hangs)
+            elif hangs.state in ['declined','auto_declined']:
+                response = no_retry_body
             else:
                 response = fail_body
         elif message.isdigit():
