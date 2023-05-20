@@ -13,6 +13,8 @@
         <thead>
             <tr>
                 <th>Name</th>
+                <th>ID</th>
+                <th>Your ID</th>
                 <th>State</th>
                 <th>Time Slot</th>
                 <th>User Type</th>
@@ -20,14 +22,14 @@
         </thead>
         <tbody>
             {% for hang in hangs %}
-            {% if current_user.id != hang[1].id %}
             <tr class="{{ colors[hang[0].state] }}">
                 <td>{{ hang[2] }}</td>
+                <td>{{ hang[1].id }}</td>
+                <td>{{ current_user.id }}</td>
                 <td>{{ hang[0].state }}</td>
                 <td>{{ hang[0].finalized_slot }}</td>
                 <td>{{ hang[1].user_type }}</td>
             </tr>
-            {% endif %}
             {% endfor %}
         </tbody>
     </table>
