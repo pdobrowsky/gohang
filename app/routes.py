@@ -17,12 +17,15 @@ colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "decli
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
+    new_user_template = "\U0001F44B Hi {}, I'm Luna! I'm a chatbot that's here to help you stay connected with your friends \U0001F97A \n\nYour friend {} {} ({}) added you as a friend they'd like to hang out with! Every now and then I might check on your availability on {} behalf! Stay tuned!\n\nWant to learn more? Check out our About page: https://hangtime.herokuapp.com/about"
 
     if user is None:
         user = User(phone_number=form.phone_number.data, first_name=form.name.data)
         db.session.add(user)
         db.session.commit()
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
+        message = new_user_template.format(user.first_name, current_user.first_name, current_user.last_name, current_user.phone_number, current_user.first_name)
+        messager.send(message, user.phone_number)
     elif user == current_user: 
         flash('You can\'t friend yourself!')
         return None
@@ -36,6 +39,7 @@ def add_friend(form):
     friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
     db.session.add(friend)
     db.session.commit()
+
     flash('Added {} as a friend!'.format(form.name.data))
 
 @app.before_request
@@ -262,7 +266,9 @@ def signup():
         return redirect(url_for('index'))
     
     form = SignUpForm()
-    message_template = "Hey Paul, someone named {} signed up for HangTime with the following info:\nPhone: {}\nEmail: {}\nInvite Code: {}\n\n-Luna"
+    notify_template = "Hey Paul, someone named {} signed up for HangTime with the following info:\nPhone: {}\nEmail: {}\nInvite Code: {}\n\n-Luna"
+    claim_template = "Hey {},\nYou've claimed your account on HangTime! This means I won't be sending you texts to figure out when you're free anymore :( but I'll still let you know when you have hangouts cooming up, and you can always reach out to me if you have any questions or feedback.\n\nI'm always happy to help!\n\n-Luna"
+    create_template = "Hey {},\nYou've created an account on HangTime! I'm Luna, HangTime's chatbot. I'm excited to help you spend more time with your friends! You can always reach out to me if you have any questions or feedback.\n\nI'm always happy to help!\n\n-Luna"
 
     if form.validate_on_submit():
         if not app.config['ALLOW_SIGNUP']:
@@ -282,6 +288,8 @@ def signup():
             db.session.commit()
 
             flash('Your account was claimed! Log in to start spending more time with friends')
+            message = claim_template.format(form.first_name.data)
+            messager.send(message, form.phone_number.data)
         else:
             user = User(email=form.email.data, first_name=form.first_name.data, 
                         last_name=form.last_name.data, phone_number=form.phone_number.data, 
@@ -291,8 +299,10 @@ def signup():
             db.session.commit()
 
             flash('Your account was created! Log in to start spending more time with friends')
+            message = create_template.format(form.first_name.data)
+            messager.send(message, form.phone_number.data)
 
-        message = message_template.format(form.first_name.data, form.phone_number.data, form.email.data, form.invite_code.data)
+        message = notify_template.format(form.first_name.data, form.phone_number.data, form.email.data, form.invite_code.data)
         messager.send(message, app.config['ADMIN_NUMBER'])
         return redirect(url_for('login'))
 
@@ -398,3 +408,5 @@ def contact():
 @app.route('/about')
 def about():
     return render_template('about.html', title='About')
+
+pleading_face = u'\U0001F97A'
