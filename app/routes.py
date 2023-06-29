@@ -17,7 +17,8 @@ colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "decli
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
-    new_user_template = "\U0001F44B Hi {}, I'm Luna! I'm a chatbot that's here to help you stay connected with your friends \U0001F97A \n\nYour friend {} {} ({}) added you as a friend they'd like to hang out with! Every now and then I might check on your availability on {} behalf! Stay tuned!\n\nWant to learn more? Check out our About page: https://hangtime.herokuapp.com/about"
+    new_user_template = "\U0001F44B Hi {}, I'm Luna, from HangTime! I'm a chatbot that's here to help you stay connected with your friends \U0001F97A \n\nYour friend {} {} ({}) added you as a friend they'd like to hang out with! Every now and then I might check on your availability on {} behalf! Stay tuned!\n\nWant to learn more? Check out our About page: https://hangtime.herokuapp.com/about"
+    new_friend_template = "\U0001F44B Hi {}, your friend {} {} ({}) added you as a friend they'd like to hang out with!\n\n-Luna"
 
     if user is None:
         user = User(phone_number=form.phone_number.data, first_name=form.name.data)
