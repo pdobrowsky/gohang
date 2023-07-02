@@ -26,7 +26,7 @@ help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
 retry_body = """Great! I'll send some more availability when I know more!\n-Luna"""
 no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
-weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free! If you're not free, just ignore this message.\n-Luna"""
+weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free so I can reach out to your friends! If you're not free, just ignore this message.\n-Luna"""
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -173,17 +173,18 @@ def weekly_avails_reminder():
     # if not, it sends them a reminder to do so
     # running this is triggered by run_weekly_avails_reminder once a week
     
-    # all hang users
-    users = User.query.filter_by(user_type='hang').all()
-    print('checking {} users for weekly avails'.format(len(users)))
+    # only run on Sunday
+    if get_scope()['attempt_weekday'] == 0:
+        users = User.query.filter_by(user_type='hang').all()
+        print('checking {} users for weekly avails'.format(len(users)))
 
-    for user in users:
-        # check if they have a schedule for the current week
-        schedule = Schedule.query.filter_by(user_id=user.id, week_of_int=get_scope()['attempt_week']).first()
-        if schedule is None:
-            print('user {} has not set a schedule for the current week'.format(user.id))
-            message = weekly_avails_reminder_body.format(user.first_name, get_scope()['attempt_week'])
-            send(message, user.phone_number)
+        for user in users:
+            # check if they have a schedule for the current week
+            schedule = Schedule.query.filter_by(user_id=user.id, week_of_int=get_scope()['attempt_week']).first()
+            if schedule is None:
+                print('user {} has not set a schedule for the current week'.format(user.id))
+                message = weekly_avails_reminder_body.format(user.first_name, get_scope()['attempt_week'])
+                send(message, user.phone_number)
 
 # PREP DATASET
 def get_current_attempts():
