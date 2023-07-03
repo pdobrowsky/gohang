@@ -132,3 +132,13 @@ class Hang(db.Model):
 
     def __repr__(self):
         return '<Hang>'
+    
+class Conversation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    uid = db.Column(db.String(255), index=True)
+    sid = db.Column(db.String(255), index=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
+    updated_at = db.Column(db.DateTime, index=True)
+
+    def __repr__(self):
+        return '<Conversation uid: {}>'.format(self.uid)

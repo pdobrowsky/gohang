@@ -3,7 +3,7 @@ import datetime as dt
 import calendar
 
 from app import db, app, sms_client
-from app.models import User, Hang, Schedule
+from app.models import User, Hang, Schedule, Conversation
 from scheduler.scheduler import melt_schedule, sched_from_string, empty_schedule, get_scope
 
 # DB CONNECTION
@@ -21,8 +21,8 @@ remind_body_base = """Hi! \U0001F44B Just a reminder that you two are hanging ou
 accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
 decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y!\n-Luna"""
 auto_decline_body = """Hi! \U0001F44B I haven't heard back from you, I'm going to assume you're busy or none of these times work, if you're still interested in hanging out this week, just respond to this message with Y and I'll try to find another time that works for both of you!\n-Luna"""
-help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers! \U0001F929 \n-Luna""".format(app.config['URL'])
-fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'! I promise I'll be a smarter chatbot in the future \U0001F97A \n-Luna"""
+help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers!\n-Luna""".format(app.config['URL'])
+fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'!"""
 retry_body = """Great! I'll send some more availability when I know more!\n-Luna"""
 no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
 weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free so I can reach out to your friends! If you're not free, just ignore this message.\n-Luna"""
@@ -35,13 +35,26 @@ def send(message, number):
                 to=number)
     
 def group_send(message, numbers):
-    conversation = sms_client.conversations.v1.conversations.create(friendly_name='group mms')
-    sms_client.conversations.v1.conversations(conversation.sid).participants.create(identity='luna',messaging_binding_projected_address=gohang_number)
+    # check twilio conversations api to see if there is already a conversation for this group
+    numbers = numbers.sort()
+    uid = ''.join(numbers)
+    conversation = Conversation.query.filter_by(uid=uid).first()
 
-    for number in numbers:
-        sms_client.conversations.v1.conversations(conversation.sid).participants.create(messaging_binding_address=number)
+    if conversation is None:
+        # create a new conversation
+        conversation = sms_client.conversations.v1.conversations.create(friendly_name=uid)
+        sms_client.conversations.v1.conversations(conversation.sid).participants.create(identity='luna',messaging_binding_projected_address=gohang_number)
+
+        for number in numbers:
+            sms_client.conversations.v1.conversations(conversation.sid).participants.create(messaging_binding_address=number)
+
+        conversation = Conversation(uid=uid, sid=conversation.sid)
+        db.session.add(conversation)
+        db.session.commit()
 
     sms_client.conversations.v1.conversations(conversation.sid).messages.create(body=message, author='luna')
+    conversation.updated_at = dt.datetime.utcnow()
+    db.session.commit()
 
 def accept(hangs, message):
     new_schedule = empty_schedule.copy()
