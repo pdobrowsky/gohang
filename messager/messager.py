@@ -1,4 +1,3 @@
-# data ingestion should be handled by each function?
 import pandas as pd
 import datetime as dt
 import calendar
@@ -15,9 +14,9 @@ conn = db.engine.connect()
 gohang_number = app.config['TWILIO_NUMBER']
 admin_number = app.config['ADMIN_NUMBER']
 
-attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering whether you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
-confirm_body_base = """Confirmed! \U0001F4C5 You and {} are hanging on {}. Have fun! \U0001F37B \n-Luna"""
-remind_body_base = """Hi! \U0001F44B Just a reminder that you and {} are hanging out on {}. Check in with them if you haven't already to finalize your plans. Have fun! \U0000E415 \n-Luna"""
+attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering if you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
+confirm_body_base = """Confirmed! \U0001F4C5 You two are hanging on {}. Have fun! \U0001F37B \n-Luna"""
+remind_body_base = """Hi! \U0001F44B Just a reminder that you two are hanging out on {}. Finalize your plans, and have fun! \U0000E415 \n-Luna"""
 
 accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
 decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y!\n-Luna"""
@@ -34,6 +33,15 @@ def send(message, number):
                 body=message,
                 from_=gohang_number,
                 to=number)
+    
+def group_send(message, numbers):
+    conversation = sms_client.conversations.v1.conversations.create(friendly_name='group mms')
+    sms_client.conversations.v1.conversations(conversation.sid).participants.create(identity='luna',messaging_binding_projected_address=gohang_number)
+
+    for number in numbers:
+        sms_client.conversations.v1.conversations(conversation.sid).participants.create(messaging_binding_address=number)
+
+    sms_client.conversations.v1.conversations(conversation.sid).messages.create(body=message, author='luna')
 
 def accept(hangs, message):
     new_schedule = empty_schedule.copy()
@@ -96,10 +104,8 @@ def remind():
             u2 = User.query.filter_by(id=hang.user_id_2).first()
 
             print("reminding {} and {} of their hang on {}".format(u1.first_name, u2.first_name, hang.finalized_slot))
-            message = remind_body_base.format(u1.first_name, hang.finalized_slot)
-            send(message, u2.phone_number)
-            message = remind_body_base.format(u2.first_name, hang.finalized_slot)
-            send(message, u1.phone_number)
+            message = remind_body_base.format(hang.finalized_slot)
+            group_send(message, [u2.phone_number, u1.phone_number])
 
             hang.reminded = True
             hang.updated_at = dt.datetime.utcnow()
@@ -144,10 +150,8 @@ def handle_responses(sender, message):
         if and_confirm:
             u1 = User.query.filter_by(id=hangs.user_id_1).first() # the initiating user from hang app
 
-            message = confirm_body_base.format(u1.first_name, day + " " + time)
-            send(message, sender)
-            message = confirm_body_base.format(user.first_name, day + " " + time)
-            send(message, u1.phone_number)
+            message = confirm_body_base.format(day + " " + time)
+            group_send(message, [u1.phone_number, sender])
 
 def auto_decline():
     # function to auto decline hangs that have not been responded to
@@ -253,10 +257,8 @@ def confirm_mutuals():
         u1 = User.query.filter_by(id=hang.user_id_1).first()
         u2 = User.query.filter_by(id=hang.user_id_2).first()
 
-        message = confirm_body_base.format(u1.first_name, hang.finalized_slot)
-        send(message, u2.phone_number)
-        message = confirm_body_base.format(u2.first_name, hang.finalized_slot)
-        send(message, u1.phone_number)
+        message = confirm_body_base.format(hang.finalized_slot)
+        group_send(message, [u2.phone_number, u1.phone_number])
 
         hang.state = 'confirmed'
         hang.updated_at = dt.datetime.utcnow()
