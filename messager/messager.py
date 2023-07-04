@@ -14,9 +14,12 @@ conn = db.engine.connect()
 gohang_number = app.config['TWILIO_NUMBER']
 admin_number = app.config['ADMIN_NUMBER']
 
+# SMS TEMPLATES
+# SCHEDULING
 attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering if you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
 confirm_body_base = """Confirmed! \U0001F4C5 You two are hanging on {}. Have fun! \U0001F37B \n-Luna"""
 remind_body_base = """Hi! \U0001F44B Just a reminder that you two are hanging out on {}. Finalize your plans, and have fun! \U0000E415 \n-Luna"""
+weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free so I can reach out to your friends! If you're not free, just ignore this message.\n-Luna"""
 
 accept_body_base = """Yay! \U0001F60D Confirming now! \n-Luna"""
 decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y!\n-Luna"""
@@ -25,7 +28,29 @@ help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like \'1\' or \'N\'. \n\nOr you might have encountered a bug :( \n\nIf you need help try saying \'Luna\'!"""
 retry_body = """Great! I'll send some more availability when I know more!\n-Luna"""
 no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
-weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free so I can reach out to your friends! If you're not free, just ignore this message.\n-Luna"""
+
+# GROUP INTERACTIONS
+# a base of a reminder
+# a general help message
+# a specific help message (what to do? what time?)
+concierge_base_fail_response = """I don't think you two are hanging out this week, but if you'd like to do something just ask for an activity like \'Luna, what should we do for lunch?"\'"""
+concierge_base_response = """You're hanging out on {}. You should figure out:\nWhat time?\nWhat to do? (dinner, drinks)\nWhere to go? (neighborhood, etc.)\n\nIf you need help, just say \'Luna, got any ideas?\'"""
+concierge_specific_response = """\U0001F914 since it's {}, are you thinking {}? And since it's a {},  {}\n-Luna"""
+concierge_suggestions = """\U0001f64c ok, {} I have some ideas! \n\nLoading..."""
+concierge_create = """Hi, I'd love to help, sign up at https://hangtime.herokuapp.com/!"""
+
+# building block responses, add emojis later
+time_of_day = {"morning":{"emoji":"\U0001F305", 
+                        "activities": "coffee, a workout, or brunch?"}, 
+                "afternoon": {"emoji":"\U0001F31E", 
+                            "activities": "lunch, a walk, or a museum?"}, 
+                "evening": {"emoji": "\U0001F319",
+                            "activities": "dinner, drinks, or a show?"}}
+
+period_in_week = {"weekday": {"emoji": "\U0001F4C5", 
+                      "response": "I'd also consider if you work near one another, and what time you start/get out of work"},
+        "weekend": {"emoji": "\U0001F3C6",
+                    "response": "I'd also consider how close by you live, and what time you wake up/go to bed"}}
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -124,6 +149,11 @@ def remind():
             hang.updated_at = dt.datetime.utcnow()
             db.session.commit()
 
+def confirm(hangs):
+    pass
+    # shoudl check scheudles are still accurate, not going over max hangs?
+    # and then do the actual sending
+
 def handle_responses(sender, message):
     # should I move getting the user and hang to the top? Then better understand what is possible here before moving into the if statements
     user = User.query.filter_by(phone_number=sender).first()
@@ -165,6 +195,70 @@ def handle_responses(sender, message):
 
             message = confirm_body_base.format(day + " " + time)
             group_send(message, [u1.phone_number, sender])
+
+def handle_group_responses(sender, message, recipient):
+    # this function looks up the conversation based on the sender and recipient
+    # this lets the function know which hang to use
+    # it will use that to respond to the users, or have a default response if the hang/response doesn't exist
+
+    # get all the data we need
+    user_send = User.query.filter_by(phone_number=sender).first()
+    user_receive = User.query.filter_by(phone_number=recipient).first()
+    activities = ['coffee', 'a walk', 'lunch', 'a workout','brunch', 'a museuem', 'dinner', 'drinks', 'a show', 'happy hour', 'a movie', 'a concert', 'a hike', 'a run', 'a bike ride', 'a picnic', 'a game']
+    found = False
+    nums = [user_send.phone_number, user_receive.phone_number]
+    nums.sort()
+    uid = ''.join(nums)
+    convo = Conversation.query.filter_by(uid=uid).first()
+    attempt_week = get_scope()['attempt_week']
+    hang_a_check = Hang.query.filter_by(user_id_2=user_send.id, user_id_1=user_receive.id, week_of=attempt_week).filter(Hang.state.in_(['confirmed'])).first() 
+    hang_b_check = Hang.query.filter_by(user_id_1=user_send.id, user_id_2=user_receive.id, week_of=attempt_week).filter(Hang.state.in_(['confirmed'])).first() 
+    hang = hang_a_check
+
+
+    if convo is None: # do these two talk?
+        send(concierge_create, sender)
+        return
+    if 'luna' not in message.lower(): # check for luna being mentioned
+            return
+    
+    for activity in activities:     # check for activity
+        if activity in message.lower():
+            found = True
+            group_send(concierge_suggestions, [user_send.phone_number, user_receive.phone_number])
+
+    if found: # found an activity, so exit
+        return
+    if hang_a_check is None: # check for a hang
+        hang = hang_b_check
+        if hang_b_check is None: # no hang
+            group_send(concierge_base_fail_response, [user_send.phone_number, user_receive.phone_number])
+            hang = None
+            return
+    if 'ideas' not in message.lower(): # check if asking for ideas
+        group_send(concierge_base_response.format(hang.finalized_slot), [user_send.phone_number, user_receive.phone_number])
+        return
+
+    # respond with "ideas"/framing questions
+    # response based on the time
+    # get the time from the hang, then respond based on that
+    slot = hang.finalized_slot
+    day = slot.split(' ')[0]
+    time = slot.split(' ')[1]
+
+    # check if the day is a weekday or weekend
+    # convert the day to a datetime object
+    # then check if it is a weekday or weekend
+    period_dict = {'Monday': 'weekday', 'Tuesday': 'weekday', 'Wednesday': 'weekday', 'Thursday': 'weekday', 'Friday': 'weekday', 'Saturday': 'weekend', 'Sunday': 'weekend'}
+    hang_period = period_dict[day]
+    period_emoji = period_in_week[hang_period]['emoji']
+    period_response = period_in_week[hang_period]['response']
+
+    # check if the time is morning, afternoon, or evening
+    time_emoji = time_of_day[time.lower()]['emoji']
+    time_response = time_of_day[time.lower()]['activities']
+
+    group_send(concierge_specific_response.format(time.lower()+time_emoji, time_response, hang_period+period_emoji, period_response), [user_send.phone_number, user_receive.phone_number])
 
 def auto_decline():
     # function to auto decline hangs that have not been responded to

@@ -382,10 +382,12 @@ def incoming_sms():
 
     r_message = request.values.get('Body', None)
     r_sender = request.values.get('From', None)
-    r_group = request.values.get('OtherRecipients0', None)
+    r_receiver = request.values.get('OtherRecipients0', None)
 
     if not r_group:
         messager.handle_responses(r_sender, r_message)
+    else:
+        messager.handle_group_responses(r_sender, r_message, r_receiver)
 
     return 'OK!'
 
