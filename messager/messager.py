@@ -37,7 +37,7 @@ concierge_base_fail_response = """I don't think you two are hanging out this wee
 concierge_base_response = """You're hanging out on {}. You should figure out:\nWhat time?\nWhat to do? (dinner, drinks)\nWhere to go? (neighborhood, etc.)\n\nIf you need help, just say \'Luna, got any ideas?\'"""
 concierge_specific_response = """\U0001F914 since it's {}, are you thinking {}? And since it's a {},  {}\n-Luna"""
 concierge_suggestions = """\U0001f64c ok, {} I have some ideas! \n\nLoading..."""
-concierge_create = """Hi, I'd love to help, sign up at https://hangtime.herokuapp.com/!"""
+concierge_create = """Hi, I'd love to help, make sure you've both signed up at https://hangtime.herokuapp.com/!"""
 
 # building block responses, add emojis later
 time_of_day = {"morning":{"emoji":"\U0001F305", 
@@ -225,7 +225,7 @@ def handle_group_responses(sender, message, recipient):
     for activity in activities:     # check for activity
         if activity in message.lower():
             found = True
-            group_send(concierge_suggestions, [user_send.phone_number, user_receive.phone_number])
+            group_send(concierge_suggestions.format(activity), [user_send.phone_number, user_receive.phone_number])
 
     if found: # found an activity, so exit
         return
