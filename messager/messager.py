@@ -32,7 +32,7 @@ no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
 # GROUP CONCIERGE
 concierge_base_fail_response = """I don't think you two are hanging out this week, but if you'd like to do something just ask for an activity like \'Luna, what should we do for lunch?"\'"""
 concierge_base_response = """You're hanging out on {}. You should figure out:\nWhat time?\nWhat to do? (dinner, drinks)\nWhere to go? (neighborhood, etc.)\n\nIf you need help, just say \'Luna, got any ideas?\'"""
-concierge_specific_response = """\U0001F914 since it's {}, are you thinking {}? And since it's a {}...{}\n-Luna"""
+concierge_specific_response = """\U0001F914 since it's {}, are you thinking {}? And since it's a {}...{}"""
 concierge_suggestions = """\U0001f64c ok {}, I have some ideas! \n\nLoading..."""
 concierge_create = """Hi, I'd love to help, make sure you've both signed up at https://hangtime.herokuapp.com/!"""
 

@@ -118,9 +118,10 @@ def melt_schedule(sched):
 
 def check_max_hangs(user_id):
     # check that the user has not reached their max hangs for the week
+    # counts attempted to try and be conservative, but does not count declined that might get retried (so can technically still go over max)
     max_hangs = User.query.filter_by(id=user_id).first().max_hang_per_week
-    confirmed_hangs = Hang.query.filter_by(week_of=attempt_week).filter(or_(Hang.user_id_1 == user_id, Hang.user_id_2 == user_id),Hang.state.in_(['confirmed','accepted'])).all()
-    if len(confirmed_hangs) >= max_hangs:
+    possible_hangs = Hang.query.filter_by(week_of=attempt_week).filter(or_(Hang.user_id_1 == user_id, Hang.user_id_2 == user_id),Hang.state.in_(['confirmed','accepted','attempted'])).all()
+    if len(possible_hangs) >= max_hangs:
         return False
     else:
         return True
