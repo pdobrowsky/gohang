@@ -29,10 +29,7 @@ fail_body = """I'm sorry, I don't understand your message. If you're trying to r
 retry_body = """Great! I'll send some more availability when I know more!\n-Luna"""
 no_retry_body = """Have a good week! \U0001F44B \n-Luna"""
 
-# GROUP INTERACTIONS
-# a base of a reminder
-# a general help message
-# a specific help message (what to do? what time?)
+# GROUP CONCIERGE
 concierge_base_fail_response = """I don't think you two are hanging out this week, but if you'd like to do something just ask for an activity like \'Luna, what should we do for lunch?"\'"""
 concierge_base_response = """You're hanging out on {}. You should figure out:\nWhat time?\nWhat to do? (dinner, drinks)\nWhere to go? (neighborhood, etc.)\n\nIf you need help, just say \'Luna, got any ideas?\'"""
 concierge_specific_response = """\U0001F914 since it's {}, are you thinking {}? And since it's a {}...{}\n-Luna"""
@@ -51,6 +48,9 @@ period_in_week = {"weekday": {"emoji": "\U0001F4C5",
                       "response": "I'd also consider if you work near one another, and what time you start/get out of work"},
         "weekend": {"emoji": "\U0001F3C6",
                     "response": "I'd also consider how close by you live, and what time you wake up/go to bed"}}
+
+activities = ['coffee', 'a walk', 'lunch', 'a workout','brunch', 'a museuem', 'dinner', 'drinks', 'a show', 'happy hour', 'a movie', 'a concert', 'a hike', 'a run', 'a bike ride', 'a picnic', 'a game']
+period_dict = {'Monday': 'weekday', 'Tuesday': 'weekday', 'Wednesday': 'weekday', 'Thursday': 'weekday', 'Friday': 'weekday', 'Saturday': 'weekend', 'Sunday': 'weekend'}
 
 # HANDLERS FOR DIFFERENT RESPONSES
 def send(message, number):
@@ -204,7 +204,6 @@ def handle_group_responses(sender, message, recipient):
     # get all the data we need
     user_send = User.query.filter_by(phone_number=sender).first()
     user_receive = User.query.filter_by(phone_number=recipient).first()
-    activities = ['coffee', 'a walk', 'lunch', 'a workout','brunch', 'a museuem', 'dinner', 'drinks', 'a show', 'happy hour', 'a movie', 'a concert', 'a hike', 'a run', 'a bike ride', 'a picnic', 'a game']
     found = False
     nums = [user_send.phone_number, user_receive.phone_number]
     nums.sort()
@@ -249,7 +248,6 @@ def handle_group_responses(sender, message, recipient):
     # check if the day is a weekday or weekend
     # convert the day to a datetime object
     # then check if it is a weekday or weekend
-    period_dict = {'Monday': 'weekday', 'Tuesday': 'weekday', 'Wednesday': 'weekday', 'Thursday': 'weekday', 'Friday': 'weekday', 'Saturday': 'weekend', 'Sunday': 'weekend'}
     hang_period = period_dict[day]
     period_emoji = period_in_week[hang_period]['emoji']
     period_response = period_in_week[hang_period]['response']
@@ -258,7 +256,7 @@ def handle_group_responses(sender, message, recipient):
     time_emoji = time_of_day[time.lower()]['emoji']
     time_response = time_of_day[time.lower()]['activities']
 
-    group_send(concierge_specific_response.format(time.lower()+time_emoji, time_response, hang_period+period_emoji, period_response), [user_send.phone_number, user_receive.phone_number])
+    group_send(concierge_specific_response.format(time.lower(), time_response, hang_period, period_response), [user_send.phone_number, user_receive.phone_number])
 
 def auto_decline():
     # function to auto decline hangs that have not been responded to
