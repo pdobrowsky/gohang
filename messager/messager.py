@@ -36,7 +36,7 @@ def send(message, number):
     
 def group_send(message, numbers):
     # check twilio conversations api to see if there is already a conversation for this group
-    numbers = numbers.sort()
+    numbers.sort()
     uid = ''.join(numbers)
     conversation = Conversation.query.filter_by(uid=uid).first()
 
