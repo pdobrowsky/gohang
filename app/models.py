@@ -26,6 +26,7 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime)
     friends = db.relationship('Friend', primaryjoin='user.c.id == friend.c.creator_user_id', lazy='dynamic')
+    has_responded = db.Column(db.Boolean, default=False)
 
     @login.user_loader
     def load_user(id):
