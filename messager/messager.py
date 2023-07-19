@@ -101,13 +101,13 @@ def handle_responses(sender, message):
     elif hangs is None: # if they respond to a hang that doesn't exist
         response = fail_body
     else: # if they respond to a hang that exists
-        if message == 'Y':
+        if message.lower() == 'y':
             # if they say yes check if they actually declined before, if so, set retry to true
             if hangs.state in ['declined','auto_declined']:
                 response = retry(hangs)
             else:
                 response = fail_body
-        elif message == 'N':
+        elif message.lower() == 'n':
             # is there something to decline?
             if hangs.state == 'attempted':
                 response = decline(hangs)
@@ -263,7 +263,7 @@ def confirm(hangs):
     # shoudl check scheudles are still accurate, not going over max hangs?
     # and then do the actual sending
 
-# PROACTIVE FUNCTIONS
+# PROACTIVE FUNCTIONS - the megaphone!
 def auto_decline_warn():
     # scans through hangs that are attempted and warns the sms user that they will be auto declined soon
     # only do this if the user has ever responded before (avoid spamming too much)
@@ -386,8 +386,7 @@ def request_hangs():
     # future method to check what hangs are scheduled
     pass
 
-def new():
-    # future method to create new friend
+def invite():
     pass
 
 def cancel():
