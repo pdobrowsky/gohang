@@ -280,8 +280,8 @@ def signup():
     
     form = SignUpForm()
     notify_template = "Hey Paul, someone named {} signed up for HangTime with the following info:\nPhone: {}\nEmail: {}\nInvite Code: {}\n\n-Luna"
-    claim_template = "Hey {},\nYou've claimed your account on HangTime! This means I won't be sending you texts to figure out when you're free anymore :( but I'll still let you know when you have hangouts cooming up, and you can always reach out to me if you have any questions or feedback.\n\nI'm always happy to help!\n\n-Luna"
-    create_template = "Hey {},\nYou've created an account on HangTime! I'm Luna, HangTime's chatbot. I'm excited to help you spend more time with your friends! You can always reach out to me if you have any questions or feedback.\n\nI'm always happy to help!\n\n-Luna"
+    claim_template = "Hey {},\nYou've claimed your account on HangTime! I won't be sending you texts to figure out when you're free anymore :( but I'll still let you know when you have hangouts coming up. {}\n\n-Luna"
+    create_template = "Hey {},\nYou've created an account on HangTime! I'm Luna, HangTime's chatbot. I'm excited to help you spend more time with your friends! You can expect to hear from me when you have hangouts coming up. And you can always reach out if you have any questions or feedback :)\n\n-Luna"
 
     if form.validate_on_submit():
         if not app.config['ALLOW_SIGNUP']:
@@ -301,7 +301,15 @@ def signup():
             db.session.commit()
 
             flash('Your account was claimed! Log in to start spending more time with friends')
-            message = claim_template.format(form.first_name.data)
+            user_friends = Friend.query.filter_by(friend_user_id=user.id).all()
+            user_friends_count = len(user_friends)
+
+            if user_friends_count == 0:
+                mutual_notify = """"""
+            else:
+                mutual_notify = """Btw, you have {} friends already on HangTime. Go to https://hangtime.herokuapp.com/friends to set up your preferences, or respond 'match' to set them up automatically.""".format(user_friends_count)
+
+            message = claim_template.format(form.first_name.data, mutual_notify)
             messager.send(message, form.phone_number.data)
         else:
             user = User(email=form.email.data, first_name=form.first_name.data, 
