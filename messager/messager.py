@@ -17,7 +17,7 @@ admin_number = app.config['ADMIN_NUMBER']
 # SMS TEMPLATES
 # SCHEDULING
 attempt_body_base = """Hi {}! \U0001F44B Your friend {} was wondering if you're free to hang at any of the below times this week \U0001F4C5\n{}\nIf you are, just reply with the number of your preferred time! Or N if none of them work.\n-Luna"""
-confirm_body_base = """Confirmed! \U0001F4C5 You two are hanging on {}. Have fun! \U0001F37B \n-Luna"""
+confirm_body_base = """Confirmed! \U0001F4C5 You two are hanging on {}. If you need any help, just include 'Luna' in your message! Have fun! \U0001F37B \n-Luna"""
 remind_body_base = """Hi! \U0001F44B Just a reminder that you two are hanging out on {}. Finalize your plans, and have fun! \U0000E415 \n-Luna"""
 weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for the coming week!\n\n \U0001F4C5 Please go to https://hangtime.herokuapp.com/create_schedule/{} to let me know when you're free so I can reach out to your friends! If you're not free, just ignore this message.\n-Luna"""
 
@@ -40,17 +40,12 @@ concierge_create = """Hi, I'd love to help, make sure you've both signed up at h
 # building block responses, add emojis later
 activities = ['coffee', 'a walk', 'lunch', 'a workout','brunch', 'a museuem', 'dinner', 'drinks', 'a show', 'happy hour', 'a movie', 'a concert', 'a hike', 'a run', 'a bike ride', 'a picnic', 'a game']
 period_dict = {'Monday': 'weekday', 'Tuesday': 'weekday', 'Wednesday': 'weekday', 'Thursday': 'weekday', 'Friday': 'weekday', 'Saturday': 'weekend', 'Sunday': 'weekend'}
-time_of_day = {"morning":{"emoji":"\U0001F305", 
-                        "activities": "coffee, a workout, or brunch?"}, 
-                "afternoon": {"emoji":"\U0001F31E", 
-                            "activities": "lunch, a walk, or a museum?"}, 
-                "evening": {"emoji": "\U0001F319",
-                            "activities": "dinner, drinks, or a show?"}}
+time_of_day = {"morning":{"activities": "coffee, a workout, or brunch?"}, 
+                "afternoon": {"activities": "lunch, a walk, or a museum?"}, 
+                "evening": {"activities": "dinner, drinks, or a show?"}}
 
-period_in_week = {"weekday": {"emoji": "\U0001F4C5", 
-                      "response": "I'd also consider if you work near one another, and what time you start/get out of work"},
-        "weekend": {"emoji": "\U0001F3C6",
-                    "response": "I'd also consider how close by you live, and what time you wake up/go to bed"}}
+period_in_week = {"weekday": {"response": "I'd also consider if you work near one another, and what time you start/get out of work"},
+                    "weekend": {"response": "I'd also consider how close by you live, and what time you wake up/go to bed"}}
 
 # SEND AND RECEIVE
 def send(message, number):
@@ -182,9 +177,7 @@ def handle_group_responses(sender, message, recipient):
     day = slot.split(' ')[0]
     time = slot.split(' ')[1]
     hang_period = period_dict[day]
-    period_emoji = period_in_week[hang_period]['emoji']
     period_response = period_in_week[hang_period]['response']
-    time_emoji = time_of_day[time.lower()]['emoji']
     time_response = time_of_day[time.lower()]['activities']
 
     group_send(concierge_specific_response.format(time.lower(), time_response, hang_period, period_response), [user_send.phone_number, user_receive.phone_number])

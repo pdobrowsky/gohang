@@ -17,8 +17,10 @@ colors = {"prospect":"active", "confirmed":"success", "attempted":"info", "decli
 
 def add_friend(form):
     user = User.query.filter_by(phone_number=form.phone_number.data).first()
-    new_user_template = "\U0001F44B Hi {}, I'm Luna, from HangTime! I'm a chatbot that's here to help you stay connected with your friends \U0001F97A \n\nYour friend {} {} ({}) added you as a friend they'd like to hang out with! Every now and then I might check on your availability on {} behalf! Stay tuned!\n\nWant to learn more? Check out our About page: https://hangtime.herokuapp.com/about"
-    new_friend_template = "\U0001F44B Hi {}, your friend {} {} ({}) added you as a friend they'd like to hang out with!\n\n-Luna"
+    new_user = False
+    new_user_template = "\U0001F44B Hi {}, I'm Luna, from HangTime! I'm here to help you stay connected with your friends \U0001f601 \n\n{} {} ({}) added you as a friend they'd like to hang out with! Every now and then I might check on your availability on {}'s behalf! Stay tuned!\n\nWant to learn more? Check out our About page: https://hangtime.herokuapp.com/about"
+    new_friend_template = "Hi {}, {} {} ({}) added you as a friend they'd like to hang out with!\n\n-Luna"
+    new_hang_friend_template = "Hi {}, {} {} ({}) added you as a friend they'd like to hang out with! Go to https://hangtime.herokuapp.com/friends to add them back!\n\n-Luna"
 
     if user is None:
         user = User(phone_number=form.phone_number.data, first_name=form.name.data)
@@ -27,6 +29,7 @@ def add_friend(form):
         user = User.query.filter_by(phone_number=form.phone_number.data).first()
         message = new_user_template.format(user.first_name, current_user.first_name, current_user.last_name, current_user.phone_number, current_user.first_name)
         messager.send(message, user.phone_number)
+        new_user = True
     elif user == current_user: 
         flash('You can\'t friend yourself!')
         return None
@@ -40,6 +43,15 @@ def add_friend(form):
     friend = Friend(creator_user_id=current_user.id, friend_user_id=user.id, cadence=form.cadence.data, provided_name=form.name.data)
     db.session.add(friend)
     db.session.commit()
+
+    # notify already existing users of the new friend
+    if not new_user:
+        if user.user_type == 'sms':
+            message = new_friend_template.format(user.first_name, current_user.first_name, current_user.last_name, current_user.phone_number)
+            messager.send(message, user.phone_number)
+        else:
+            message = new_hang_friend_template.format(user.first_name, current_user.first_name, current_user.last_name, current_user.phone_number)
+            messager.send(message, user.phone_number)
 
     flash('Added {} as a friend!'.format(form.name.data))
 
