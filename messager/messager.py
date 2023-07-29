@@ -23,12 +23,12 @@ weekly_avails_reminder_body = """Hi {}! You haven't shared your availability for
 
 accept_body_base = """Yay! \U0001F60D Confirming now!"""
 decline_body_base = """Dang! \U0001F629 Would it be ok if tried to share some more times that might work? If it is, respond Y!\n-Luna"""
-auto_decline_body = """Hi! \U0001F44B I haven't heard back from you, I'm going to assume you're busy. If you're still interested in hanging out this week respond with Y and I'll try to find another time that works for both of you!"""
-help_body = """\U0001F44B It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers!\n-Luna""".format(app.config['URL'])
+auto_decline_body = """I haven't heard back from you, I'm going to assume you're busy. If you're still interested in hanging out this week respond with Y and I'll try to find another time that works for both of you!"""
+help_body = """It looks like you need some help. \n\nPlease go to {}/contact to send a message to my developers!\n-Luna""".format(app.config['URL'])
 fail_body = """I'm sorry, I don't understand your message. If you're trying to respond to availability that was sent to you, try responding exactly like '1' or 'N'. Or you might have encountered a bug :( \n\nIf you need help try saying 'Luna'!"""
 retry_body = """Great! I'll send some more availability when I know more!"""
 no_retry_body = """Have a good week! \U0001F44B"""
-check_in_body = """^ \U0001F44B Just checking in! Respond in the next 12 hours if any of the times work for you!"""
+warn_body = """^ \U0001F44B Just checking in! Let me know if any of those times work for you!"""
 
 # GROUP CONCIERGE
 concierge_base_fail_response = """I don't think you two are hanging out this week, but if you'd like to do something just ask for an activity like \'Luna, what should we do for lunch?"\'"""
@@ -260,7 +260,19 @@ def confirm(hangs):
 def auto_decline_warn():
     # scans through hangs that are attempted and warns the sms user that they will be auto declined soon
     # only do this if the user has ever responded before (avoid spamming too much)
-    pass
+    hangs = Hang.query.filter_by(state='attempted', week_of=get_scope()['attempt_week']).all()
+    print('checking {} hangs for auto decline warning'.format(len(hangs)))
+
+    for hang in hangs:
+        u2 = User.query.filter_by(id=hang.user_id_2).first()
+        if u2.has_responded:
+            time_since_attempt = (dt.datetime.utcnow() - hang.updated_at).total_seconds()
+            print('hang {} was attempted {} seconds ago'.format(hang.id, time_since_attempt))
+
+            if time_since_attempt > 54000 and time_since_attempt < 90000:
+                print("warning user {} of auto decline for hang {}".format(u2.first_name, hang.id))
+                message = warn_body
+                send(message, u2.phone_number)
 
 def auto_decline():
     # function to auto decline hangs that have not been responded to
