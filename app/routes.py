@@ -433,5 +433,3 @@ def contact():
 @app.route('/about')
 def about():
     return render_template('about.html', title='About')
-
-pleading_face = u'\U0001F97A'

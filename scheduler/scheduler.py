@@ -169,6 +169,7 @@ def get_friends_to_schedule():
 
     # is it time to hang?
     confirmed_hangs = pd.read_sql(Hang.query.filter_by(state='confirmed').statement, conn)
+    confirmed_hangs = confirmed_hangs[confirmed_hangs.week_of < attempt_week]
     confirmed_hangs['set'] = confirmed_hangs[['user_id_1', 'user_id_2']].apply(lambda x: frozenset(x), axis=1)
     recent_hangs = confirmed_hangs.pivot_table(index='set', values='week_of', aggfunc=max).reset_index()
 
