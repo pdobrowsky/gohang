@@ -53,30 +53,20 @@ class SignUpForm(FlaskForm):
 class EditProfileForm(FlaskForm):
     first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=30)])
     last_name = StringField('Last Name', validators=[DataRequired(), Length(min=1, max=30)])
-    phone_number = StringField('Phone Number', validators=[DataRequired(),], render_kw={'readonly': True})
     email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)], render_kw={'readonly': True})
     max_hang_per_week = SelectField('Max Hangs Per Week', choices=[1,2,3,4], coerce=int, validators=[DataRequired()])
     fast_or_max = SelectField('Fast or Max', choices=[('fast', 'Fast'), ('max', 'Max')], validators=[DataRequired()])
     submit = SubmitField('Submit')
 
-    def __init__(self, original_email, original_phone_number, *args, **kwargs):
+    def __init__(self, original_email, *args, **kwargs):
         super(EditProfileForm, self).__init__(*args, **kwargs)
         self.original_email = original_email
-        self.original_phone_number = original_phone_number
             
     def validate_email(self, email):
         if email.data != self.original_email:
             user = User.query.filter_by(email=self.email.data).first()
             if user is not None:
                 raise ValidationError('This email is already taken.')
-        
-    def validate_phone_number(self, phone_number):
-        check_phone_number(phone_number)
-        
-        if phone_number.data != self.phone_number:
-            user = User.query.filter_by(phone_number=self.phone_number.data).first()
-            if user is not None:
-                raise ValidationError('This number is already taken.')
             
 class EditFriendForm(FlaskForm):
     name = StringField('Name', validators=[DataRequired(), Length(min=2, max=30)])

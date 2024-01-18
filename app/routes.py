@@ -332,7 +332,7 @@ def signup():
 @app.route('/profile', methods=['GET', 'POST'])
 @login_required
 def profile():
-    form = EditProfileForm(current_user.email, current_user.phone_number)
+    form = EditProfileForm(current_user.email)
 
     if form.validate_on_submit():
         current_user.first_name = form.first_name.data
@@ -349,7 +349,6 @@ def profile():
         form.first_name.data = current_user.first_name
         form.last_name.data = current_user.last_name
         form.email.data = current_user.email
-        form.phone_number = current_user.phone_number
         form.max_hang_per_week.data = current_user.max_hang_per_week
         form.fast_or_max.data = current_user.fast_or_max
 
